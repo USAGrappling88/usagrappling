@@ -51,22 +51,6 @@ export function HeroSection() {
               </a>
             </Button>
           </div>
-
-          {/* Stats */}
-          <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto animate-fade-in" style={{ animationDelay: "0.6s" }}>
-            <div>
-              <div className="text-3xl md:text-4xl font-display font-bold text-usa-gold">50K+</div>
-              <div className="text-white/70 text-sm mt-1">Members</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-display font-bold text-usa-gold">500+</div>
-              <div className="text-white/70 text-sm mt-1">Events/Year</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-display font-bold text-usa-gold">50</div>
-              <div className="text-white/70 text-sm mt-1">States</div>
-            </div>
-          </div>
         </div>
       </div>
 
