@@ -3,9 +3,9 @@ import battlegearLogo from "@/assets/partners/battlegear.png";
 import dollamurLogo from "@/assets/partners/dollamur.png";
 
 const partners = [
-  { name: "The Grappling Network", logo: tgnLogo, size: "h-12 md:h-16", url: "https://www.youtube.com/channel/UC5WZywvvzGFcSi2gZsrf-8g" },
-  { name: "Dollamur", logo: dollamurLogo, size: "h-12 md:h-16", url: "https://dollamur.com/" },
-  { name: "BattleGear", logo: battlegearLogo, size: "h-12 md:h-14", url: "https://www.battlegear247.com/" },
+  { name: "The Grappling Network", logo: tgnLogo, size: "h-20 md:h-28", url: "https://www.youtube.com/channel/UC5WZywvvzGFcSi2gZsrf-8g" },
+  { name: "Dollamur", logo: dollamurLogo, size: "h-20 md:h-28", url: "https://dollamur.com/" },
+  { name: "BattleGear", logo: battlegearLogo, size: "h-16 md:h-24", url: "https://www.battlegear247.com/" },
 ];
 
 export function PartnersSection() {

@@ -1,7 +1,7 @@
 import { Layout } from "@/components/layout/Layout";
-import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
+import safecoachScreenshot from "@/assets/safecoach-screenshot.png";
 
 const SAFECOACH_SIGNUP_URL = "https://app.safecoachbackgroundchecks.com/signup/org/USAGRAPPLING";
 const SAFECOACH_LOGIN_URL = "https://app.safecoachbackgroundchecks.com";
@@ -27,39 +27,13 @@ const CoachesOfficials = () => {
       {/* SafeCoach Screenshot Section */}
       <section className="pb-12 md:pb-16 bg-background">
         <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto border-border shadow-card overflow-hidden">
-            <CardContent className="p-0">
-              <div className="bg-muted/30 p-8 flex justify-center">
-                <div className="bg-card rounded-lg shadow-lg p-4 max-w-md w-full">
-                  <div className="text-center mb-4">
-                    <div className="inline-block bg-primary/10 p-3 rounded-full mb-2">
-                      <span className="text-primary text-2xl">🛡️</span>
-                    </div>
-                    <h3 className="font-display font-bold text-foreground">Run a Background Check</h3>
-                  </div>
-                  <div className="space-y-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">First Name</span>
-                      <span className="flex-1 border-b border-border"></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Last Name</span>
-                      <span className="flex-1 border-b border-border"></span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground">Email</span>
-                      <span className="flex-1 border-b border-border"></span>
-                    </div>
-                  </div>
-                  <div className="mt-6 text-center">
-                    <span className="inline-block bg-primary text-primary-foreground px-6 py-2 rounded text-sm font-medium">
-                      Generate Report
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="max-w-5xl mx-auto">
+            <img 
+              src={safecoachScreenshot} 
+              alt="SafeCoach Background Check Interface" 
+              className="w-full rounded-lg shadow-elevated"
+            />
+          </div>
         </div>
       </section>
 

@@ -89,15 +89,8 @@ export function MembershipSection() {
           {memberships.map((membership) => (
             <Card 
               key={membership.title}
-              className={`relative border ${membership.popular ? 'border-accent shadow-elevated' : 'border-border shadow-card'} hover:shadow-elevated transition-shadow duration-300`}
+              className="relative border border-border shadow-card hover:shadow-elevated transition-shadow duration-300 flex flex-col"
             >
-              {membership.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-accent text-accent-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                    Most Popular
-                  </span>
-                </div>
-              )}
               <CardHeader className="text-center pb-4">
                 <CardTitle className="font-display text-lg font-bold text-foreground">
                   {membership.title}
@@ -108,8 +101,8 @@ export function MembershipSection() {
                   <span className="text-muted-foreground text-sm">{membership.period}</span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <ul className="space-y-3 mb-6">
+              <CardContent className="flex flex-col flex-1">
+                <ul className="space-y-3 mb-6 flex-1">
                   {membership.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-2 text-sm">
                       <Check className="w-4 h-4 text-accent shrink-0 mt-0.5" />
@@ -119,7 +112,7 @@ export function MembershipSection() {
                 </ul>
                 <Button 
                   asChild 
-                  className={`w-full ${membership.popular ? 'bg-accent hover:bg-accent/90' : 'bg-primary hover:bg-primary/90'}`}
+                  className="w-full bg-primary hover:bg-primary/90 mt-auto"
                 >
                   <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
                     Get Started
