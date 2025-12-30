@@ -1,162 +1,117 @@
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { GraduationCap, Users, Trophy, Target } from "lucide-react";
 import ncgaBanner from "@/assets/ncga-banner.jpg";
 
 const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
-
-const programs = [
-  {
-    icon: GraduationCap,
-    title: "NCAA Wrestling Programs",
-    description: "Partner with established wrestling programs to add grappling as a complementary training method.",
-  },
-  {
-    icon: Users,
-    title: "Club Sports Teams",
-    description: "Start or join a collegiate grappling club at your university with USA Grappling support.",
-  },
-  {
-    icon: Trophy,
-    title: "Collegiate Nationals",
-    description: "Compete at the annual Collegiate Nationals tournament and represent your school.",
-  },
-  {
-    icon: Target,
-    title: "Scholarship Opportunities",
-    description: "Connect with programs offering grappling-specific scholarships and athletic opportunities.",
-  },
-];
+const NCGA_URL = "https://www.thencga.org";
+const NCGA_VIDEO_URL = "https://www.youtube.com/embed/YOUR_VIDEO_ID";
 
 const Collegiate = () => {
   return (
     <Layout>
-      {/* Hero with NCGA Banner */}
+      {/* Hero Banner */}
       <section className="relative">
-        <img 
-          src={ncgaBanner} 
-          alt="National Collegiate Grappling Association" 
-          className="w-full h-auto"
-        />
-      </section>
-
-      {/* Intro Section */}
-      <section className="py-16 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-              Collegiate Grappling Programs
-            </h1>
-            <p className="text-primary-foreground/90 text-lg md:text-xl mb-8">
-              Bringing world-class grappling to universities across America. 
-              Train, compete, and represent your school on the national stage.
-            </p>
-            <Button 
-              asChild 
-              size="lg" 
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
-                Join as a Student Athlete
-              </a>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Programs Grid */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Program Opportunities
-            </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Multiple pathways for colleges and students to get involved with competitive grappling.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {programs.map((program) => {
-              const Icon = program.icon;
-              return (
-                <Card key={program.title} className="border-border shadow-card hover:shadow-elevated transition-shadow">
-                  <CardContent className="p-8">
-                    <div className="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
-                      <Icon className="w-7 h-7 text-primary" />
-                    </div>
-                    <h3 className="font-display text-xl font-bold text-foreground mb-3">
-                      {program.title}
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {program.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* How to Start */}
-      <section className="py-20 bg-secondary">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">
-              Start a Program at Your School
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto mb-4 font-display font-bold text-xl">
-                  1
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-2">Register Your Club</h3>
-                <p className="text-muted-foreground text-sm">
-                  Work with your student activities office to register as an official club sport.
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto mb-4 font-display font-bold text-xl">
-                  2
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-2">Affiliate with USAG</h3>
-                <p className="text-muted-foreground text-sm">
-                  Apply for USA Grappling affiliation to access insurance, events, and resources.
-                </p>
-              </div>
-              <div className="text-center">
-                <div className="w-12 h-12 bg-accent text-accent-foreground rounded-full flex items-center justify-center mx-auto mb-4 font-display font-bold text-xl">
-                  3
-                </div>
-                <h3 className="font-display font-bold text-foreground mb-2">Start Competing</h3>
-                <p className="text-muted-foreground text-sm">
-                  Register for collegiate events and begin your journey to Collegiate Nationals.
-                </p>
-              </div>
+        <div className="relative w-full h-[300px] md:h-[400px] overflow-hidden">
+          <img 
+            src={ncgaBanner} 
+            alt="Collegiate Grappling" 
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-primary/60 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+                Collegiate Grappling
+              </h1>
+              <p className="text-lg md:text-xl text-white/90">
+                The Future of Collegiate Sports is Here
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="font-display text-3xl md:text-4xl font-bold mb-6">
-            Ready to Bring Grappling to Your Campus?
-          </h2>
-          <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-            Contact us to learn more about starting or growing a collegiate grappling program.
-          </p>
-          <Button 
-            asChild 
-            size="lg" 
-            className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-          >
-            <a href="/contact">Get in Touch</a>
-          </Button>
+      {/* Official Launch Section */}
+      <section className="py-12 md:py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <Card className="max-w-4xl mx-auto border-border shadow-card">
+            <CardContent className="p-8 md:p-12">
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground text-center mb-6">
+                Official Launch of Collegiate Grappling
+              </h2>
+              <p className="text-muted-foreground mb-4">
+                We're excited to announce the official launch of grappling as a collegiate sport through the{" "}
+                <span className="text-primary font-semibold">National Collegiate Grappling Association (NCGA)</span>!{" "}
+                This groundbreaking initiative brings structured competition, national rankings, and championship 
+                opportunities to student athletes across the country.
+              </p>
+              <p className="text-muted-foreground">
+                Whether you're starting a new club or representing an established team, now is the time to get involved.{" "}
+                For more information on participation and registration requirements, visit{" "}
+                <a 
+                  href={NCGA_URL} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  www.thencga.org
+                </a>
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Video Section */}
+      <section className="py-12 md:py-16 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-8">
+              Watch the NCGA Promotional Video
+            </h2>
+            <div className="aspect-video rounded-lg overflow-hidden shadow-elevated">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                title="NCGA Promotional Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-12 md:py-16 bg-primary">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="font-display text-2xl md:text-3xl font-bold text-white mb-4">
+              Ready to Get Your School Involved?
+            </h2>
+            <p className="text-white/80 mb-8">
+              Join the growing community of collegiate grappling programs across the nation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                asChild 
+                className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
+              >
+                <a href={NCGA_URL} target="_blank" rel="noopener noreferrer">
+                  Visit NCGA Website
+                </a>
+              </Button>
+              <Button 
+                asChild 
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-primary"
+              >
+                <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+                  Join USA Grappling
+                </a>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
     </Layout>
