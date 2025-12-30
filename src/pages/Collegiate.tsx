@@ -72,7 +72,7 @@ const Collegiate = () => {
             <div className="aspect-video rounded-lg overflow-hidden shadow-elevated">
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                src="https://www.youtube.com/embed/H5YS3TzvLbE"
                 title="NCGA Promotional Video"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
