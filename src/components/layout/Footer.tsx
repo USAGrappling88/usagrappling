@@ -1,20 +1,19 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
-
 const footerLinks = {
   organization: [
     { label: "About Us", href: "/about" },
+    { label: "Membership", href: "/membership" },
     { label: "Collegiate Programs", href: "/collegiate" },
     { label: "Coaches & Officials", href: "/coaches-officials" },
     { label: "Contact", href: "/contact" },
   ],
   resources: [
     { label: "FAQ", href: "/faq" },
-    { label: "Membership", href: SMOOTHCOMP_URL, external: true },
+    { label: "Events", href: "https://usag.smoothcomp.com/en/federation/362/events", external: true },
     { label: "Shop", href: "https://usa-grappling-inc.myshopify.com/", external: true },
-    { label: "Events", href: SMOOTHCOMP_URL, external: true },
+    { label: "Privacy Policy", href: "/privacy" },
   ],
   social: [
     { label: "Facebook", href: "https://facebook.com", icon: Facebook },

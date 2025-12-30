@@ -6,7 +6,10 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/collegiate", label: "Collegiate Programs" },
+  { href: "/about", label: "About" },
+  { href: "/membership", label: "Membership" },
+  { href: "/events", label: "Events", external: true, externalHref: "https://usag.smoothcomp.com/en/federation/362/events" },
+  { href: "/collegiate", label: "Collegiate" },
   { href: "/coaches-officials", label: "Coaches/Officials" },
   { href: "https://usa-grappling-inc.myshopify.com/", label: "Shop", external: true },
   { href: "/contact", label: "Contact" },
