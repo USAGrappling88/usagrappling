@@ -12,19 +12,19 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email",
-    value: "info@usagrappling.org",
-    href: "mailto:info@usagrappling.org",
+    value: "info@usagrappling.com",
+    href: "mailto:info@usagrappling.com",
   },
   {
     icon: Phone,
     title: "Phone",
-    value: "(555) 123-4567",
-    href: "tel:+15551234567",
+    value: "512.886.3151",
+    href: "tel:+15128863151",
   },
   {
     icon: MapPin,
     title: "Location",
-    value: "United States",
+    value: "PO Box 931112 Los Angeles, CA 90093",
     href: null,
   },
 ];

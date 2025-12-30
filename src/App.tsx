@@ -8,6 +8,10 @@ import Collegiate from "./pages/Collegiate";
 import CoachesOfficials from "./pages/CoachesOfficials";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
+import About from "./pages/About";
+import Events from "./pages/Events";
+import Membership from "./pages/Membership";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,10 +24,14 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/about" element={<About />} />
           <Route path="/collegiate" element={<Collegiate />} />
           <Route path="/coaches-officials" element={<CoachesOfficials />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/membership" element={<Membership />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

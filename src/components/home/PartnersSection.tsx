@@ -3,9 +3,9 @@ import battlegearLogo from "@/assets/partners/battlegear.png";
 import dollamurLogo from "@/assets/partners/dollamur.png";
 
 const partners = [
-  { name: "The Grappling Network", logo: tgnLogo },
-  { name: "Dollamur", logo: dollamurLogo },
-  { name: "BattleGear", logo: battlegearLogo },
+  { name: "The Grappling Network", logo: tgnLogo, size: "h-12 md:h-16" },
+  { name: "Dollamur", logo: dollamurLogo, size: "h-12 md:h-16" },
+  { name: "BattleGear", logo: battlegearLogo, size: "h-12 md:h-14" },
 ];
 
 export function PartnersSection() {
@@ -25,7 +25,7 @@ export function PartnersSection() {
               <img 
                 src={partner.logo} 
                 alt={partner.name} 
-                className="h-16 md:h-20 w-auto object-contain"
+                className={`${partner.size} w-auto object-contain`}
               />
             </div>
           ))}
