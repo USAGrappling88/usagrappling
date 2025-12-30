@@ -3,7 +3,7 @@ import battlegearLogo from "@/assets/partners/battlegear.png";
 import dollamurLogo from "@/assets/partners/dollamur.png";
 
 const partners = [
-  { name: "The Grappling Network", logo: tgnLogo, size: "h-[84px] md:h-[118px]", url: "https://www.youtube.com/channel/UC5WZywvvzGFcSi2gZsrf-8g" },
+  { name: "The Grappling Network", logo: tgnLogo, size: "h-[88px] md:h-[124px]", url: "https://www.youtube.com/channel/UC5WZywvvzGFcSi2gZsrf-8g" },
   { name: "Dollamur", logo: dollamurLogo, size: "h-20 md:h-28", url: "https://dollamur.com/" },
   { name: "BattleGear", logo: battlegearLogo, size: "h-16 md:h-24", url: "https://www.battlegear247.com/" },
 ];
