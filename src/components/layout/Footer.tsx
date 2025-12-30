@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Facebook, Instagram, Twitter, Youtube } from "lucide-react";
+import usagLogo from "@/assets/usag-logo.png";
 
 const footerLinks = {
   organization: [
@@ -32,11 +33,12 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center">
-                <span className="text-accent-foreground font-display font-bold text-sm">USA</span>
-              </div>
-              <span className="font-display font-bold text-lg">USA Grappling</span>
+            <Link to="/" className="flex items-center mb-4">
+              <img 
+                src={usagLogo} 
+                alt="USA Grappling" 
+                className="h-14 w-auto"
+              />
             </Link>
             <p className="text-primary-foreground/70 text-sm leading-relaxed">
               The national governing body for grappling in the United States. Train. Compete. Represent.

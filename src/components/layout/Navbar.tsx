@@ -3,17 +3,14 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import usagLogo from "@/assets/usag-logo.png";
 
 const navLinks = [
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
-  { href: "/membership", label: "Membership" },
-  { href: "/events", label: "Events", external: true, externalHref: "https://usag.smoothcomp.com/en/federation/362/events" },
-  { href: "/collegiate", label: "Collegiate" },
+  { href: "/collegiate", label: "Collegiate Programs" },
   { href: "/coaches-officials", label: "Coaches/Officials" },
   { href: "https://usa-grappling-inc.myshopify.com/", label: "Shop", external: true },
   { href: "/contact", label: "Contact" },
-  { href: "/faq", label: "FAQ" },
 ];
 
 const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
@@ -27,13 +24,12 @@ export function Navbar() {
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground font-display font-bold text-sm md:text-base">USA</span>
-            </div>
-            <span className="font-display font-bold text-lg md:text-xl text-foreground">
-              USA Grappling
-            </span>
+          <Link to="/" className="flex items-center">
+            <img 
+              src={usagLogo} 
+              alt="USA Grappling" 
+              className="h-12 md:h-14 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
