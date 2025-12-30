@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import heroBanner from "@/assets/hero-banner.png";
 
 const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
 const ZEFFY_URL = "https://www.zeffy.com/en-US/donation-form/68fac6bd-7c3e-40d6-b540-4f22b1c1f3fd";
@@ -6,9 +7,14 @@ const ZEFFY_URL = "https://www.zeffy.com/en-US/donation-form/68fac6bd-7c3e-40d6-
 export function HeroSection() {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
-      {/* Background placeholder - user will upload image */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent/80">
-        <div className="absolute inset-0 bg-hero-overlay" />
+      {/* Background image */}
+      <div className="absolute inset-0">
+        <img 
+          src={heroBanner} 
+          alt="Two grapplers facing off with American flag background" 
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/50 to-transparent" />
       </div>
 
       {/* Content */}

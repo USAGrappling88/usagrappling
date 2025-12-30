@@ -1,11 +1,12 @@
-export function PartnersSection() {
-  // Partner placeholders - user will upload actual logos
-  const partners = [
-    { name: "The Grappling Network", placeholder: "TGN" },
-    { name: "Dollamur", placeholder: "Dollamur" },
-    { name: "BattleGear", placeholder: "BattleGear" },
-  ];
+import tgnLogo from "@/assets/partners/tgn.png";
+import battlegearLogo from "@/assets/partners/battlegear.png";
 
+const partners = [
+  { name: "The Grappling Network", logo: tgnLogo },
+  { name: "BattleGear", logo: battlegearLogo },
+];
+
+export function PartnersSection() {
   return (
     <section className="py-16 bg-background">
       <div className="container mx-auto px-4">
@@ -17,14 +18,13 @@ export function PartnersSection() {
           {partners.map((partner) => (
             <div
               key={partner.name}
-              className="grayscale hover:grayscale-0 transition-all duration-300 opacity-60 hover:opacity-100"
+              className="grayscale hover:grayscale-0 transition-all duration-300 opacity-70 hover:opacity-100"
             >
-              {/* Placeholder for partner logo - user will upload */}
-              <div className="h-12 md:h-16 flex items-center justify-center px-6 py-3 bg-muted rounded-lg">
-                <span className="font-display font-bold text-muted-foreground text-lg">
-                  {partner.placeholder}
-                </span>
-              </div>
+              <img 
+                src={partner.logo} 
+                alt={partner.name} 
+                className="h-16 md:h-20 w-auto object-contain"
+              />
             </div>
           ))}
         </div>
