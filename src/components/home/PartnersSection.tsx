@@ -1,8 +1,10 @@
 import tgnLogo from "@/assets/partners/tgn.png";
 import battlegearLogo from "@/assets/partners/battlegear.png";
+import dollamurLogo from "@/assets/partners/dollamur.png";
 
 const partners = [
   { name: "The Grappling Network", logo: tgnLogo },
+  { name: "Dollamur", logo: dollamurLogo },
   { name: "BattleGear", logo: battlegearLogo },
 ];
 
