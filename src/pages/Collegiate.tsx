@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap, Users, Trophy, Target } from "lucide-react";
+import ncgaBanner from "@/assets/ncga-banner.jpg";
 
 const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
 
@@ -31,11 +32,20 @@ const programs = [
 const Collegiate = () => {
   return (
     <Layout>
-      {/* Hero */}
-      <section className="py-20 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground">
+      {/* Hero with NCGA Banner */}
+      <section className="relative">
+        <img 
+          src={ncgaBanner} 
+          alt="National Collegiate Grappling Association" 
+          className="w-full h-auto"
+        />
+      </section>
+
+      {/* Intro Section */}
+      <section className="py-16 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center">
-            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
+            <h1 className="font-display text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
               Collegiate Grappling Programs
             </h1>
             <p className="text-primary-foreground/90 text-lg md:text-xl mb-8">
