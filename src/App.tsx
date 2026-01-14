@@ -13,6 +13,8 @@ import Events from "./pages/Events";
 import Membership from "./pages/Membership";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import NewsArticle from "./pages/NewsArticle";
+import PressRelease from "./pages/PressRelease";
+import PressOps from "./pages/admin/PressOps";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,7 +36,10 @@ const App = () => (
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/news/:slug" element={<NewsArticle />} />
+          <Route path="/news/:slug" element={<PressRelease />} />
+          <Route path="/admin/press-ops" element={<PressOps />} />
+          {/* Legacy news article route */}
+          <Route path="/news-legacy/:slug" element={<NewsArticle />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

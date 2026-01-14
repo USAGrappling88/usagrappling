@@ -14,4 +14,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://usa-grappling.com/sitemap.xml
+Sitemap: https://www.usa-grappling.com/sitemap.xml

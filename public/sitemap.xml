@@ -2,60 +2,58 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Main Pages -->
   <url>
-    <loc>https://usa-grappling.com/</loc>
+    <loc>https://www.usa-grappling.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/about</loc>
+    <loc>https://www.usa-grappling.com/about</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/events</loc>
+    <loc>https://www.usa-grappling.com/events</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/membership</loc>
+    <loc>https://www.usa-grappling.com/membership</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/collegiate</loc>
+    <loc>https://www.usa-grappling.com/collegiate</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/coaches-officials</loc>
+    <loc>https://www.usa-grappling.com/coaches-officials</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/faq</loc>
+    <loc>https://www.usa-grappling.com/faq</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/contact</loc>
+    <loc>https://www.usa-grappling.com/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://usa-grappling.com/privacy-policy</loc>
+    <loc>https://www.usa-grappling.com/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   
-  <!-- News Articles -->
+  <!-- News/Press Releases - Dynamic entries will be added via admin when published -->
+  <!-- Example format for published press releases:
   <url>
-    <loc>https://usa-grappling.com/news/usa-grappling-expands-nationwide-youth-collegiate-support</loc>
+    <loc>https://www.usa-grappling.com/news/{slug}</loc>
+    <lastmod>{publish_date}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://usa-grappling.com/news/usa-grappling-acwa-catch-wrestling-partnership</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  -->
 </urlset>

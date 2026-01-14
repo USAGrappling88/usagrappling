@@ -14,7 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      press_releases: {
+        Row: {
+          approval_note: string | null
+          body_html: string | null
+          canonical_url: string | null
+          category: string | null
+          created_at: string
+          distribution_status: Database["public"]["Enums"]["distribution_status"]
+          id: string
+          instagram_caption: string | null
+          linkedin_post: string | null
+          meta_description: string | null
+          meta_title: string | null
+          og_image_url: string | null
+          one_click_approve: boolean | null
+          pitch_email: string | null
+          publish_date: string | null
+          robots_index: boolean | null
+          slug: string
+          status: Database["public"]["Enums"]["press_release_status"]
+          summary: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          wire_keywords: string | null
+          wire_summary: string | null
+          wire_title: string | null
+        }
+        Insert: {
+          approval_note?: string | null
+          body_html?: string | null
+          canonical_url?: string | null
+          category?: string | null
+          created_at?: string
+          distribution_status?: Database["public"]["Enums"]["distribution_status"]
+          id?: string
+          instagram_caption?: string | null
+          linkedin_post?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_image_url?: string | null
+          one_click_approve?: boolean | null
+          pitch_email?: string | null
+          publish_date?: string | null
+          robots_index?: boolean | null
+          slug: string
+          status?: Database["public"]["Enums"]["press_release_status"]
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          wire_keywords?: string | null
+          wire_summary?: string | null
+          wire_title?: string | null
+        }
+        Update: {
+          approval_note?: string | null
+          body_html?: string | null
+          canonical_url?: string | null
+          category?: string | null
+          created_at?: string
+          distribution_status?: Database["public"]["Enums"]["distribution_status"]
+          id?: string
+          instagram_caption?: string | null
+          linkedin_post?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
+          og_image_url?: string | null
+          one_click_approve?: boolean | null
+          pitch_email?: string | null
+          publish_date?: string | null
+          robots_index?: boolean | null
+          slug?: string
+          status?: Database["public"]["Enums"]["press_release_status"]
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          wire_keywords?: string | null
+          wire_summary?: string | null
+          wire_title?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +115,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      distribution_status:
+        | "not_started"
+        | "prepared"
+        | "approved_to_submit"
+        | "submitted_manual"
+        | "submitted_auto"
+        | "published_on_wires"
+      press_release_status:
+        | "draft"
+        | "ready_for_review"
+        | "approved"
+        | "published"
+        | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +254,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      distribution_status: [
+        "not_started",
+        "prepared",
+        "approved_to_submit",
+        "submitted_manual",
+        "submitted_auto",
+        "published_on_wires",
+      ],
+      press_release_status: [
+        "draft",
+        "ready_for_review",
+        "approved",
+        "published",
+        "archived",
+      ],
+    },
   },
 } as const
