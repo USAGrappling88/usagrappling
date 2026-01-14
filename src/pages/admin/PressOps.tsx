@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import {
@@ -14,8 +15,11 @@ import {
   Loader2,
   Upload,
   Image as ImageIcon,
+  LogOut,
+  ShieldAlert,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,6 +104,8 @@ const distributionColors: Record<DistributionStatus, string> = {
 };
 
 const PressOps = () => {
+  const navigate = useNavigate();
+  const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPR, setSelectedPR] = useState<PressRelease | null>(null);
@@ -111,6 +117,50 @@ const PressOps = () => {
     category: "",
     og_image_url: "",
   });
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  // Show access denied if not admin
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect
+  }
+
+  if (!isAdmin) {
+    return (
+      <Layout>
+        <div className="max-w-md mx-auto py-20 px-4 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-destructive/10 rounded-full">
+              <ShieldAlert className="w-12 h-12 text-destructive" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">
+            You don't have admin privileges to access this page. Contact an administrator to request access.
+          </p>
+          <Button variant="outline" onClick={() => signOut().then(() => navigate('/'))}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -356,13 +406,18 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
               Manage press releases, approvals, and distribution
             </p>
           </div>
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                New Press Release
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => signOut().then(() => navigate('/'))}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  New Press Release
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create Press Release</DialogTitle>
@@ -464,7 +519,8 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                 </Button>
               </div>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
         {/* Stats Cards */}
