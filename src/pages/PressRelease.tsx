@@ -1,18 +1,20 @@
 import { useEffect } from "react";
 import { useParams, Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Calendar, MapPin, Share2 } from "lucide-react";
+import { ArrowLeft, Calendar, Share2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getArticleBySlug } from "@/data/newsArticles";
 
 const PressRelease = () => {
   const { slug } = useParams<{ slug: string }>();
 
-  const { data: pressRelease, isLoading, error } = useQuery({
+  // Try to get from database first
+  const { data: dbPressRelease, isLoading, error } = useQuery({
     queryKey: ["press-release", slug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,13 +22,34 @@ const PressRelease = () => {
         .select("*")
         .eq("slug", slug)
         .eq("status", "published")
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data;
     },
     enabled: !!slug,
   });
+
+  // Fallback to legacy articles if not found in database
+  const legacyArticle = slug ? getArticleBySlug(slug) : undefined;
+  
+  // Use database record if available, otherwise use legacy article
+  const pressRelease = dbPressRelease || (legacyArticle ? {
+    title: legacyArticle.title,
+    slug: legacyArticle.slug,
+    summary: legacyArticle.excerpt,
+    body_html: legacyArticle.content.split('\n\n').map(p => `<p>${p}</p>`).join(''),
+    publish_date: legacyArticle.date,
+    category: null,
+    tags: [],
+    og_image_url: legacyArticle.image,
+    meta_title: legacyArticle.title,
+    meta_description: legacyArticle.excerpt,
+    canonical_url: `https://www.usa-grappling.com/news/${legacyArticle.slug}`,
+    robots_index: true,
+    updated_at: legacyArticle.date,
+    location: legacyArticle.location,
+  } : null);
 
   // Set SEO meta tags
   useEffect(() => {
@@ -159,8 +182,8 @@ const PressRelease = () => {
     );
   }
 
-  if (error || !pressRelease) {
-    return <Navigate to="/news" replace />;
+  if ((error && !legacyArticle) || (!pressRelease && !isLoading)) {
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -168,11 +191,11 @@ const PressRelease = () => {
       <article className="max-w-4xl mx-auto py-12 px-4">
         {/* Back Link */}
         <Link
-          to="/news"
+          to="/"
           className="inline-flex items-center text-muted-foreground hover:text-primary mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to News
+          Back to Home
         </Link>
 
         {/* Article Header */}
