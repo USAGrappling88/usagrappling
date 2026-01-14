@@ -59,7 +59,7 @@ As part of the collaboration, ACWA is building a national Catch Wrestling tourna
 
 The partnership strengthens USA Grappling's broader mission to educate families and support athletes entering non-striking combat sports, including Catch Wrestling, collegiate and UWW grappling, and sport jiu-jitsu. USA Grappling also provides insurance coverage for athletes, coaches, clubs and sanctioned events, helping ensure safe participation and accountability across all levels of competition.
 
-More details regarding tournament dates, locations and participation requirements are available on the ACWA website.`,
+More details regarding tournament dates, locations and participation requirements are available on the <a href="https://www.americancatchwrestling.com" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">ACWA website</a>.`,
   },
 ];
 
