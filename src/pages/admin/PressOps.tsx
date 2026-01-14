@@ -118,79 +118,7 @@ const PressOps = () => {
     og_image_url: "",
   });
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
-
-  // Show access denied if not admin
-  if (authLoading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!user) {
-    return null; // Will redirect
-  }
-
-  if (!isAdmin) {
-    return (
-      <Layout>
-        <div className="max-w-md mx-auto py-20 px-4 text-center">
-          <div className="flex justify-center mb-6">
-            <div className="p-4 bg-destructive/10 rounded-full">
-              <ShieldAlert className="w-12 h-12 text-destructive" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
-          <p className="text-muted-foreground mb-6">
-            You don't have admin privileges to access this page. Contact an administrator to request access.
-          </p>
-          <Button variant="outline" onClick={() => signOut().then(() => navigate('/'))}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </Layout>
-    );
-  }
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `press-releases/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('press-images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage
-        .from('press-images')
-        .getPublicUrl(filePath);
-
-      setNewPR({ ...newPR, og_image_url: data.publicUrl });
-      toast.success("Image uploaded successfully!");
-    } catch (error: any) {
-      toast.error(`Upload failed: ${error.message}`);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
+  // All hooks MUST be called before any conditional returns
   const { data: pressReleases, isLoading } = useQuery({
     queryKey: ["admin-press-releases"],
     queryFn: async () => {
@@ -202,6 +130,7 @@ const PressOps = () => {
       if (error) throw error;
       return data as PressRelease[];
     },
+    enabled: !!user && isAdmin, // Only fetch when user is admin
   });
 
   const createMutation = useMutation({
@@ -357,6 +286,42 @@ const PressOps = () => {
     },
   });
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `press-releases/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('press-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('press-images')
+        .getPublicUrl(filePath);
+
+      setNewPR({ ...newPR, og_image_url: data.publicUrl });
+      toast.success("Image uploaded successfully!");
+    } catch (error: any) {
+      toast.error(`Upload failed: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const copyWirePack = (pr: PressRelease) => {
     const wirePack = `WIRE TITLE: ${pr.wire_title || pr.title}
 
@@ -395,6 +360,43 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
     approved: pressReleases?.filter((p) => p.status === "approved").length || 0,
     published: pressReleases?.filter((p) => p.status === "published").length || 0,
   };
+
+  // Conditional returns AFTER all hooks
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect
+  }
+
+  if (!isAdmin) {
+    return (
+      <Layout>
+        <div className="max-w-md mx-auto py-20 px-4 text-center">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 bg-destructive/10 rounded-full">
+              <ShieldAlert className="w-12 h-12 text-destructive" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">
+            You don't have admin privileges to access this page. Contact an administrator to request access.
+          </p>
+          <Button variant="outline" onClick={() => signOut().then(() => navigate('/'))}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
