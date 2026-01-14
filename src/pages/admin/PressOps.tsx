@@ -12,6 +12,8 @@ import {
   RefreshCw,
   Eye,
   Loader2,
+  Upload,
+  Image as ImageIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Layout } from "@/components/layout/Layout";
@@ -101,6 +103,7 @@ const PressOps = () => {
   const queryClient = useQueryClient();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedPR, setSelectedPR] = useState<PressRelease | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [newPR, setNewPR] = useState({
     title: "",
     summary: "",
@@ -108,6 +111,35 @@ const PressOps = () => {
     category: "",
     og_image_url: "",
   });
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `press-releases/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('press-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('press-images')
+        .getPublicUrl(filePath);
+
+      setNewPR({ ...newPR, og_image_url: data.publicUrl });
+      toast.success("Image uploaded successfully!");
+    } catch (error: any) {
+      toast.error(`Upload failed: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const { data: pressReleases, isLoading } = useQuery({
     queryKey: ["admin-press-releases"],
@@ -355,13 +387,48 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                   />
                 </div>
                 <div>
-                  <Label htmlFor="og_image">Featured Image URL</Label>
-                  <Input
-                    id="og_image"
-                    value={newPR.og_image_url}
-                    onChange={(e) => setNewPR({ ...newPR, og_image_url: e.target.value })}
-                    placeholder="https://..."
-                  />
+                  <Label htmlFor="og_image">Featured Image</Label>
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Input
+                        id="og_image"
+                        value={newPR.og_image_url}
+                        onChange={(e) => setNewPR({ ...newPR, og_image_url: e.target.value })}
+                        placeholder="https://... or upload below"
+                        className="flex-1"
+                      />
+                      <label htmlFor="image-upload" className="cursor-pointer">
+                        <div className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+                          {isUploading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4" />
+                          )}
+                          Upload
+                        </div>
+                        <input
+                          id="image-upload"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                          disabled={isUploading}
+                        />
+                      </label>
+                    </div>
+                    {newPR.og_image_url && (
+                      <div className="relative rounded-md overflow-hidden border bg-muted">
+                        <img 
+                          src={newPR.og_image_url} 
+                          alt="Preview" 
+                          className="w-full h-32 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="summary">Summary</Label>
