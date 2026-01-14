@@ -1,4 +1,5 @@
 import { useParams, Link, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { getArticleBySlug, newsArticles } from "@/data/newsArticles";
 import { ArrowLeft, Calendar, MapPin, Share2 } from "lucide-react";
@@ -7,6 +8,53 @@ import { Button } from "@/components/ui/button";
 const NewsArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const article = slug ? getArticleBySlug(slug) : undefined;
+
+  // Set SEO meta tags
+  useEffect(() => {
+    if (article) {
+      // Set page title
+      document.title = `${article.title} | USA Grappling`;
+
+      // Set or update meta description
+      let metaDescription = document.querySelector('meta[name="description"]');
+      if (!metaDescription) {
+        metaDescription = document.createElement("meta");
+        metaDescription.setAttribute("name", "description");
+        document.head.appendChild(metaDescription);
+      }
+      metaDescription.setAttribute("content", article.excerpt.slice(0, 160));
+
+      // Set or update canonical URL
+      let canonicalLink = document.querySelector('link[rel="canonical"]');
+      if (!canonicalLink) {
+        canonicalLink = document.createElement("link");
+        canonicalLink.setAttribute("rel", "canonical");
+        document.head.appendChild(canonicalLink);
+      }
+      canonicalLink.setAttribute("href", `https://www.usa-grappling.com/news/${article.slug}`);
+
+      // Set Open Graph tags for social sharing
+      const setMetaTag = (property: string, content: string) => {
+        let meta = document.querySelector(`meta[property="${property}"]`);
+        if (!meta) {
+          meta = document.createElement("meta");
+          meta.setAttribute("property", property);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute("content", content);
+      };
+
+      setMetaTag("og:title", article.title);
+      setMetaTag("og:description", article.excerpt.slice(0, 160));
+      setMetaTag("og:type", "article");
+      setMetaTag("og:url", `https://www.usa-grappling.com/news/${article.slug}`);
+    }
+
+    return () => {
+      // Reset title on unmount
+      document.title = "USA Grappling";
+    };
+  }, [article]);
 
   if (!article) {
     return <Navigate to="/news" replace />;
