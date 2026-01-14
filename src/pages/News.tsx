@@ -1,27 +1,13 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar, MapPin, ArrowLeft } from "lucide-react";
-import { newsArticles } from "@/data/newsArticles";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Layout } from "@/components/layout/Layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface UnifiedArticle {
-  id: string;
-  slug: string;
-  title: string;
-  excerpt: string;
-  image: string;
-  date: string;
-  sortDate: Date;
-  location?: string;
-  source: "database" | "legacy";
-}
-
 export default function News() {
-  // Fetch published press releases from database
-  const { data: dbPressReleases, isLoading } = useQuery({
+  const { data: pressReleases, isLoading } = useQuery({
     queryKey: ["all-published-press-releases"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -34,39 +20,6 @@ export default function News() {
       return data;
     },
   });
-
-  // Merge database releases with legacy articles
-  const allArticles: UnifiedArticle[] = [
-    // Database press releases
-    ...(dbPressReleases?.map((pr) => ({
-      id: pr.id,
-      slug: pr.slug,
-      title: pr.title,
-      excerpt: pr.summary || "",
-      image: pr.og_image_url || "/placeholder.svg",
-      date: pr.publish_date ? format(new Date(pr.publish_date), "MMMM d, yyyy") : "",
-      sortDate: pr.publish_date ? new Date(pr.publish_date) : new Date(),
-      location: pr.category || undefined,
-      source: "database" as const,
-    })) || []),
-    // Legacy static articles
-    ...newsArticles.map((article) => ({
-      id: article.id,
-      slug: article.slug,
-      title: article.title,
-      excerpt: article.excerpt,
-      image: article.image,
-      date: article.date,
-      sortDate: new Date(article.date),
-      location: article.location,
-      source: "legacy" as const,
-    })),
-  ];
-
-  // Sort by date (newest first)
-  const sortedArticles = allArticles.sort(
-    (a, b) => b.sortDate.getTime() - a.sortDate.getTime()
-  );
 
   return (
     <Layout>
@@ -106,21 +59,21 @@ export default function News() {
                 </div>
               ))}
             </div>
-          ) : sortedArticles.length === 0 ? (
+          ) : !pressReleases || pressReleases.length === 0 ? (
             <div className="text-center py-20">
               <p className="text-muted-foreground text-lg">No news articles available.</p>
             </div>
           ) : (
             <div className="space-y-6">
-              {sortedArticles.map((article) => (
+              {pressReleases.map((article) => (
                 <Link
-                  key={`${article.source}-${article.id}`}
+                  key={article.id}
                   to={`/news/${article.slug}`}
                   className="group flex flex-col md:flex-row gap-6 bg-card rounded-xl p-4 border border-border hover:shadow-md hover:border-primary/20 transition-all"
                 >
                   <div className="md:w-48 lg:w-64 flex-shrink-0">
                     <img
-                      src={article.image}
+                      src={article.og_image_url || "/placeholder.svg"}
                       alt={article.title}
                       className="w-full h-40 md:h-32 object-cover rounded-lg"
                     />
@@ -130,19 +83,21 @@ export default function News() {
                       {article.title}
                     </h2>
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-3">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {article.date}
-                      </span>
-                      {article.location && (
+                      {article.publish_date && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {format(new Date(article.publish_date), "MMMM d, yyyy")}
+                        </span>
+                      )}
+                      {article.category && (
                         <span className="flex items-center gap-1">
                           <MapPin className="h-4 w-4" />
-                          {article.location}
+                          {article.category}
                         </span>
                       )}
                     </div>
                     <p className="text-foreground/70 line-clamp-2">
-                      {article.excerpt}
+                      {article.summary}
                     </p>
                   </div>
                   <div className="hidden md:flex items-center">
