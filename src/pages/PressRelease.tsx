@@ -51,6 +51,11 @@ const PressRelease = () => {
     location: legacyArticle.location,
   } : null);
 
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   // Set SEO meta tags
   useEffect(() => {
     if (pressRelease) {
