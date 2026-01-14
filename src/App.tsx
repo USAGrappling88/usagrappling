@@ -13,7 +13,6 @@ import About from "./pages/About";
 import Events from "./pages/Events";
 import Membership from "./pages/Membership";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
-import NewsArticle from "./pages/NewsArticle";
 import PressRelease from "./pages/PressRelease";
 import News from "./pages/News";
 import PressOps from "./pages/admin/PressOps";
@@ -44,8 +43,6 @@ const App = () => (
             <Route path="/news/:slug" element={<PressRelease />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/press-ops" element={<PressOps />} />
-            {/* Legacy news article route */}
-            <Route path="/news-legacy/:slug" element={<NewsArticle />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

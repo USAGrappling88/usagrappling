@@ -8,13 +8,11 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getArticleBySlug } from "@/data/newsArticles";
 
 const PressRelease = () => {
   const { slug } = useParams<{ slug: string }>();
 
-  // Try to get from database first
-  const { data: dbPressRelease, isLoading, error } = useQuery({
+  const { data: pressRelease, isLoading, error } = useQuery({
     queryKey: ["press-release", slug],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,27 +27,6 @@ const PressRelease = () => {
     },
     enabled: !!slug,
   });
-
-  // Fallback to legacy articles if not found in database
-  const legacyArticle = slug ? getArticleBySlug(slug) : undefined;
-  
-  // Use database record if available, otherwise use legacy article
-  const pressRelease = dbPressRelease || (legacyArticle ? {
-    title: legacyArticle.title,
-    slug: legacyArticle.slug,
-    summary: legacyArticle.excerpt,
-    body_html: legacyArticle.content.split('\n\n').map(p => `<p>${p}</p>`).join(''),
-    publish_date: legacyArticle.date,
-    category: null,
-    tags: [],
-    og_image_url: legacyArticle.image,
-    meta_title: legacyArticle.title,
-    meta_description: legacyArticle.excerpt,
-    canonical_url: `https://www.usa-grappling.com/news/${legacyArticle.slug}`,
-    robots_index: true,
-    updated_at: legacyArticle.date,
-    location: legacyArticle.location,
-  } : null);
 
   // Scroll to top on page load
   useEffect(() => {
@@ -187,8 +164,8 @@ const PressRelease = () => {
     );
   }
 
-  if ((error && !legacyArticle) || (!pressRelease && !isLoading)) {
-    return <Navigate to="/" replace />;
+  if (error || !pressRelease) {
+    return <Navigate to="/news" replace />;
   }
 
   return (
@@ -196,11 +173,11 @@ const PressRelease = () => {
       <article className="max-w-4xl mx-auto py-12 px-4">
         {/* Back Link */}
         <Link
-          to="/"
+          to="/news"
           className="inline-flex items-center text-muted-foreground hover:text-primary mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
+          Back to News
         </Link>
 
         {/* Article Header */}
