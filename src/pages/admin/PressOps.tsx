@@ -17,6 +17,13 @@ import {
   Image as ImageIcon,
   LogOut,
   ShieldAlert,
+  Trash2,
+  Archive,
+  Share2,
+  Twitter,
+  Linkedin,
+  Instagram,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,6 +45,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,6 +60,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type PressReleaseStatus = "draft" | "ready_for_review" | "approved" | "published" | "archived";
 type DistributionStatus = "not_started" | "prepared" | "approved_to_submit" | "submitted_manual" | "submitted_auto" | "published_on_wires";
@@ -103,6 +113,14 @@ const distributionColors: Record<DistributionStatus, string> = {
   published_on_wires: "bg-green-500",
 };
 
+const WIRE_OUTLETS = [
+  { id: "prlog", name: "PRLog" },
+  { id: "issuewire", name: "IssueWire" },
+  { id: "onlineprmedia", name: "OnlinePRMedia" },
+  { id: "prnewswire", name: "PR Newswire" },
+  { id: "businesswire", name: "Business Wire" },
+];
+
 const PressOps = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
@@ -118,6 +136,25 @@ const PressOps = () => {
     og_image_url: "",
   });
 
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [prToDelete, setPrToDelete] = useState<PressRelease | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Archive dialog state
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [prToArchive, setPrToArchive] = useState<PressRelease | null>(null);
+
+  // Distribution dialog state
+  const [distributionDialogOpen, setDistributionDialogOpen] = useState(false);
+  const [prToDistribute, setPrToDistribute] = useState<PressRelease | null>(null);
+  const [selectedOutlets, setSelectedOutlets] = useState<string[]>([]);
+
+  // Social distribution dialog state
+  const [socialDialogOpen, setSocialDialogOpen] = useState(false);
+  const [prForSocial, setPrForSocial] = useState<PressRelease | null>(null);
+  const [selectedSocialPlatforms, setSelectedSocialPlatforms] = useState<string[]>([]);
+
   // All hooks MUST be called before any conditional returns
   const { data: pressReleases, isLoading } = useQuery({
     queryKey: ["admin-press-releases"],
@@ -130,7 +167,7 @@ const PressOps = () => {
       if (error) throw error;
       return data as PressRelease[];
     },
-    enabled: !!user && isAdmin, // Only fetch when user is admin
+    enabled: !!user && isAdmin,
   });
 
   const createMutation = useMutation({
@@ -208,6 +245,47 @@ const PressOps = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("press_releases")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-press-releases"] });
+      setDeleteDialogOpen(false);
+      setPrToDelete(null);
+      setDeleteConfirmText("");
+      toast.success("Press release deleted permanently!");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
+  const archiveMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("press_releases")
+        .update({ status: "archived" as PressReleaseStatus })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-press-releases"] });
+      setArchiveDialogOpen(false);
+      setPrToArchive(null);
+      toast.success("Press release archived!");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to archive: ${error.message}`);
+    },
+  });
+
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
       const timestamp = new Date().toISOString();
@@ -258,7 +336,7 @@ const PressOps = () => {
   });
 
   const markSubmittedMutation = useMutation({
-    mutationFn: async ({ id, service }: { id: string; service: string }) => {
+    mutationFn: async ({ id, outlets }: { id: string; outlets: string[] }) => {
       const { data: current } = await supabase
         .from("press_releases")
         .select("approval_note")
@@ -266,9 +344,10 @@ const PressOps = () => {
         .single();
 
       const timestamp = new Date().toISOString();
+      const outletNames = outlets.map(o => WIRE_OUTLETS.find(w => w.id === o)?.name || o).join(", ");
       const newNote = current?.approval_note
-        ? `${current.approval_note}\nSubmitted to ${service}: ${timestamp}`
-        : `Submitted to ${service}: ${timestamp}`;
+        ? `${current.approval_note}\nSubmitted to ${outletNames}: ${timestamp}`
+        : `Submitted to ${outletNames}: ${timestamp}`;
 
       const { error } = await supabase
         .from("press_releases")
@@ -282,7 +361,10 @@ const PressOps = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-press-releases"] });
-      toast.success("Marked as submitted!");
+      setDistributionDialogOpen(false);
+      setPrToDistribute(null);
+      setSelectedOutlets([]);
+      toast.success("Marked as submitted to selected outlets!");
     },
   });
 
@@ -353,12 +435,57 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
     toast.success("Wire pack copied to clipboard!");
   };
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
+  const openDeleteDialog = (pr: PressRelease) => {
+    setPrToDelete(pr);
+    setDeleteConfirmText("");
+    setDeleteDialogOpen(true);
+  };
+
+  const openArchiveDialog = (pr: PressRelease) => {
+    setPrToArchive(pr);
+    setArchiveDialogOpen(true);
+  };
+
+  const openDistributionDialog = (pr: PressRelease) => {
+    setPrToDistribute(pr);
+    setSelectedOutlets([]);
+    setDistributionDialogOpen(true);
+  };
+
+  const openSocialDialog = (pr: PressRelease) => {
+    setPrForSocial(pr);
+    setSelectedSocialPlatforms([]);
+    setSocialDialogOpen(true);
+  };
+
+  const handleOutletToggle = (outletId: string) => {
+    setSelectedOutlets(prev => 
+      prev.includes(outletId) 
+        ? prev.filter(id => id !== outletId)
+        : [...prev, outletId]
+    );
+  };
+
+  const handleSocialPlatformToggle = (platform: string) => {
+    setSelectedSocialPlatforms(prev => 
+      prev.includes(platform) 
+        ? prev.filter(p => p !== platform)
+        : [...prev, platform]
+    );
+  };
+
   const stats = {
     total: pressReleases?.length || 0,
     draft: pressReleases?.filter((p) => p.status === "draft").length || 0,
     ready: pressReleases?.filter((p) => p.status === "ready_for_review").length || 0,
     approved: pressReleases?.filter((p) => p.status === "approved").length || 0,
     published: pressReleases?.filter((p) => p.status === "published").length || 0,
+    archived: pressReleases?.filter((p) => p.status === "archived").length || 0,
   };
 
   // Conditional returns AFTER all hooks
@@ -373,7 +500,7 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
   }
 
   if (!user) {
-    return null; // Will redirect
+    return null;
   }
 
   if (!isAdmin) {
@@ -397,6 +524,8 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
       </Layout>
     );
   }
+
+  const canDelete = prToDelete && deleteConfirmText === prToDelete.title;
 
   return (
     <Layout>
@@ -526,7 +655,7 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
           <Card>
             <CardHeader className="py-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -577,6 +706,16 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
               <p className="text-2xl font-bold text-green-500">{stats.published}</p>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="py-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Archived
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-0 pb-3">
+              <p className="text-2xl font-bold text-gray-400">{stats.archived}</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Press Releases Table */}
@@ -623,7 +762,7 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                         {format(new Date(pr.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-2 flex-wrap">
                           {pr.status === "draft" && (
                             <Button
                               variant="outline"
@@ -666,20 +805,25 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                           )}
 
                           {pr.distribution_status === "approved_to_submit" && (
-                            <Select
-                              onValueChange={(service) =>
-                                markSubmittedMutation.mutate({ id: pr.id, service })
-                              }
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openDistributionDialog(pr)}
                             >
-                              <SelectTrigger className="w-[140px] h-8">
-                                <SelectValue placeholder="Mark Submitted" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="PRLog">PRLog</SelectItem>
-                                <SelectItem value="IssueWire">IssueWire</SelectItem>
-                                <SelectItem value="OnlinePRMedia">OnlinePRMedia</SelectItem>
-                              </SelectContent>
-                            </Select>
+                              <Send className="w-4 h-4 mr-1" />
+                              Distribute
+                            </Button>
+                          )}
+
+                          {pr.status === "published" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openSocialDialog(pr)}
+                            >
+                              <Share2 className="w-4 h-4 mr-1" />
+                              Social
+                            </Button>
                           )}
 
                           <Button
@@ -709,6 +853,25 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                               <ExternalLink className="w-4 h-4" />
                             </Button>
                           )}
+
+                          {pr.status !== "archived" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openArchiveDialog(pr)}
+                            >
+                              <Archive className="w-4 h-4" />
+                            </Button>
+                          )}
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => openDeleteDialog(pr)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -718,6 +881,296 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-5 h-5" />
+                Delete Press Release
+              </DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete the press release from the database.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                To confirm, type the title of the press release:
+              </p>
+              <p className="font-medium text-sm bg-muted p-2 rounded break-all">
+                {prToDelete?.title}
+              </p>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Type the title to confirm"
+              />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => prToDelete && deleteMutation.mutate(prToDelete.id)}
+                disabled={!canDelete || deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4 mr-2" />
+                )}
+                Delete Permanently
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Archive Confirmation Dialog */}
+        <Dialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Archive className="w-5 h-5" />
+                Archive Press Release
+              </DialogTitle>
+              <DialogDescription>
+                Archiving will hide this press release from the public site. You can still view it in the admin panel.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="font-medium">{prToArchive?.title}</p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setArchiveDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => prToArchive && archiveMutation.mutate(prToArchive.id)}
+                disabled={archiveMutation.isPending}
+              >
+                {archiveMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Archive className="w-4 h-4 mr-2" />
+                )}
+                Archive
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Distribution Dialog */}
+        <Dialog open={distributionDialogOpen} onOpenChange={setDistributionDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Send className="w-5 h-5" />
+                Distribute to Wire Services
+              </DialogTitle>
+              <DialogDescription>
+                Select the outlets you've submitted this press release to.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <p className="font-medium text-sm">{prToDistribute?.title}</p>
+              <div className="space-y-3">
+                {WIRE_OUTLETS.map((outlet) => (
+                  <div key={outlet.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={outlet.id}
+                      checked={selectedOutlets.includes(outlet.id)}
+                      onCheckedChange={() => handleOutletToggle(outlet.id)}
+                    />
+                    <label
+                      htmlFor={outlet.id}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {outlet.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDistributionDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => prToDistribute && markSubmittedMutation.mutate({ id: prToDistribute.id, outlets: selectedOutlets })}
+                disabled={selectedOutlets.length === 0 || markSubmittedMutation.isPending}
+              >
+                {markSubmittedMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4 mr-2" />
+                )}
+                Mark as Submitted ({selectedOutlets.length})
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Social Distribution Dialog */}
+        <Dialog open={socialDialogOpen} onOpenChange={setSocialDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Share2 className="w-5 h-5" />
+                Social Media Distribution
+              </DialogTitle>
+              <DialogDescription>
+                Preview and distribute content to social media platforms.
+              </DialogDescription>
+            </DialogHeader>
+            {prForSocial && (
+              <div className="space-y-6 py-4">
+                <Tabs defaultValue="twitter" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="twitter" className="flex items-center gap-2">
+                      <Twitter className="w-4 h-4" />
+                      Twitter/X
+                    </TabsTrigger>
+                    <TabsTrigger value="linkedin" className="flex items-center gap-2">
+                      <Linkedin className="w-4 h-4" />
+                      LinkedIn
+                    </TabsTrigger>
+                    <TabsTrigger value="instagram" className="flex items-center gap-2">
+                      <Instagram className="w-4 h-4" />
+                      Instagram
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="twitter" className="space-y-4 mt-4">
+                    <div className="bg-muted rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold">USA</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm">USA Grappling</span>
+                            <span className="text-muted-foreground text-xs">@USAGrappling</span>
+                          </div>
+                          <p className="text-sm mt-2 whitespace-pre-wrap">
+                            {prForSocial.wire_summary || prForSocial.summary || "No summary available"}
+                            {"\n\n"}
+                            🔗 Read more: https://usagrappling.lovable.app/news/{prForSocial.slug}
+                          </p>
+                          {prForSocial.og_image_url && (
+                            <img
+                              src={prForSocial.og_image_url}
+                              alt="Preview"
+                              className="mt-3 rounded-lg max-h-48 object-cover w-full"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => copyToClipboard(
+                          `${prForSocial.wire_summary || prForSocial.summary || ""}\n\n🔗 Read more: https://usagrappling.lovable.app/news/${prForSocial.slug}`,
+                          "Twitter post"
+                        )}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Text
+                      </Button>
+                      <Button disabled className="flex-1">
+                        <Twitter className="w-4 h-4 mr-2" />
+                        Post to X (Coming Soon)
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="linkedin" className="space-y-4 mt-4">
+                    <div className="bg-muted rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-12 h-12 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold">USA</span>
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-bold text-sm">USA Grappling</span>
+                          <p className="text-xs text-muted-foreground">National Governing Body</p>
+                          <p className="text-sm mt-3 whitespace-pre-wrap">
+                            {prForSocial.linkedin_post || prForSocial.summary || "No LinkedIn post generated"}
+                          </p>
+                          {prForSocial.og_image_url && (
+                            <img
+                              src={prForSocial.og_image_url}
+                              alt="Preview"
+                              className="mt-3 rounded-lg max-h-48 object-cover w-full"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => copyToClipboard(prForSocial.linkedin_post || prForSocial.summary || "", "LinkedIn post")}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Text
+                      </Button>
+                      <Button disabled className="flex-1">
+                        <Linkedin className="w-4 h-4 mr-2" />
+                        Post to LinkedIn (Coming Soon)
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="instagram" className="space-y-4 mt-4">
+                    <div className="bg-muted rounded-lg p-4">
+                      <div className="max-w-sm mx-auto">
+                        {prForSocial.og_image_url ? (
+                          <img
+                            src={prForSocial.og_image_url}
+                            alt="Preview"
+                            className="rounded-lg aspect-square object-cover w-full"
+                          />
+                        ) : (
+                          <div className="aspect-square bg-background rounded-lg flex items-center justify-center">
+                            <ImageIcon className="w-12 h-12 text-muted-foreground" />
+                          </div>
+                        )}
+                        <div className="mt-3">
+                          <p className="text-sm whitespace-pre-wrap">
+                            {prForSocial.instagram_caption || "No Instagram caption generated"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="flex-1"
+                        onClick={() => copyToClipboard(prForSocial.instagram_caption || "", "Instagram caption")}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Caption
+                      </Button>
+                      <Button disabled className="flex-1">
+                        <Instagram className="w-4 h-4 mr-2" />
+                        Post to Instagram (Coming Soon)
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSocialDialogOpen(false)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Detail Dialog */}
         <Dialog open={!!selectedPR} onOpenChange={() => setSelectedPR(null)}>
