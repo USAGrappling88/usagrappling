@@ -8,6 +8,7 @@ import { NewsSection } from "@/components/home/NewsSection";
 import { MembershipSection } from "@/components/home/MembershipSection";
 import { FAQPreviewSection } from "@/components/home/FAQPreviewSection";
 import { CTASection } from "@/components/home/CTASection";
+import { InstagramFeedSection } from "@/components/home/InstagramFeedSection";
 
 const Index = () => {
   return (
@@ -16,6 +17,7 @@ const Index = () => {
       <BenefitsSection />
       <NewsSection />
       <SecondaryHeroSection />
+      <InstagramFeedSection />
       <TestimonialSection />
       <MembershipSection />
       <FAQPreviewSection />
