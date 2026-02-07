@@ -47,9 +47,12 @@ serve(async (req: Request): Promise<Response> => {
 
     console.log(`Fetching ${limit} Instagram posts...`);
 
-    // Fetch recent media from Instagram Graph API
+    // Fetch recent media from Instagram Graph API (v21.0 is latest as of 2024)
+    // The /media endpoint returns posts in reverse chronological order by default
     const fields = "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp";
-    const apiUrl = `https://graph.facebook.com/v19.0/${instagramAccountId}/media?fields=${fields}&limit=${limit}&access_token=${accessToken}`;
+    const apiUrl = `https://graph.facebook.com/v21.0/${instagramAccountId}/media?fields=${fields}&limit=${limit}&access_token=${accessToken}`;
+
+    console.log(`Fetching from Instagram API v21.0...`);
 
     const response = await fetch(apiUrl);
     const data = await response.json();
