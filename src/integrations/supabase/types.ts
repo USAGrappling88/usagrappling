@@ -37,6 +37,7 @@ export type Database = {
           summary: string | null
           tags: string[] | null
           title: string
+          twitter_post: string | null
           updated_at: string
           utm_campaign: string | null
           utm_medium: string | null
@@ -67,6 +68,7 @@ export type Database = {
           summary?: string | null
           tags?: string[] | null
           title: string
+          twitter_post?: string | null
           updated_at?: string
           utm_campaign?: string | null
           utm_medium?: string | null
@@ -97,6 +99,7 @@ export type Database = {
           summary?: string | null
           tags?: string[] | null
           title?: string
+          twitter_post?: string | null
           updated_at?: string
           utm_campaign?: string | null
           utm_medium?: string | null

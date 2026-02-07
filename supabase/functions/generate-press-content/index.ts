@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface GenerateContentRequest {
@@ -61,7 +61,9 @@ serve(async (req: Request): Promise<Response> => {
     const meta_title = title.length > 60 ? title.substring(0, 57) + '...' : title;
     const meta_description = contentSummary.length > 160 ? contentSummary.substring(0, 157) + '...' : contentSummary;
     
+    // Default fallback content
     let generatedContent = {
+      twitter_post: `📰 ${title}\n\n${contentSummary.substring(0, 180)}...\n\n🔗 ${canonical_url}\n\n#USAGrappling #Grappling #Wrestling`,
       linkedin_post: `📰 ${title}\n\n${contentSummary.substring(0, 200)}...\n\nRead more: ${canonical_url}\n\n#USAGrappling #Grappling #Wrestling #MartialArts`,
       instagram_caption: `${title}\n\n${contentSummary.substring(0, 150)}...\n\n🔗 Link in bio\n\n#USAGrappling #Grappling #Wrestling #MartialArts #GrapplingCommunity`,
       pitch_email: `Subject: ${title}\n\nDear Editor,\n\nUSA Grappling is pleased to share the following press release for your consideration:\n\n${title}\n\n${contentSummary}\n\nFor more information or to schedule an interview, please contact media@usa-grappling.com.\n\nBest regards,\nUSA Grappling Media Relations`,
@@ -73,33 +75,33 @@ serve(async (req: Request): Promise<Response> => {
     // Try to use AI for better content generation
     if (lovableApiKey) {
       try {
-        console.log("Using AI to generate enhanced content...");
+        console.log("Using AI to generate enhanced social media content...");
         
-        const aiPrompt = `You are a sports PR professional for USA Grappling, the national governing body for grappling in the United States. 
-        
-Based on this press release title and content, generate the following:
+        const aiPrompt = `You are a sports PR professional for USA Grappling, the national governing body for grappling sports in the United States. Generate compelling social media content based on this press release.
 
 Title: ${title}
 Content: ${contentSummary}
+URL: ${canonical_url}
 
 Generate JSON with these exact fields:
-1. linkedin_post: A professional LinkedIn post (max 300 chars) with relevant hashtags
-2. instagram_caption: An engaging Instagram caption (max 200 chars) with hashtags
-3. pitch_email: A professional pitch email to media outlets (include subject line)
-4. wire_title: SEO-optimized title for press wire services (max 60 chars)
-5. wire_summary: Brief summary for wire services (max 160 chars)
-6. wire_keywords: Comma-separated keywords for wire distribution
+1. twitter_post: A punchy Twitter/X post (max 250 chars including URL). Include 2-3 relevant hashtags. Must include the URL. Make it engaging and newsworthy.
+2. linkedin_post: A professional LinkedIn post (max 300 chars). Include professional hashtags and the URL. Focus on the significance and impact.
+3. instagram_caption: An engaging Instagram caption (max 200 chars) with emojis and hashtags. End with "🔗 Link in bio". Make it visually appealing.
+4. pitch_email: A professional pitch email to media outlets. Include a compelling subject line, brief intro, key points, and contact info.
+5. wire_title: SEO-optimized title for press wire services (max 60 chars)
+6. wire_summary: Brief summary for wire services (max 160 chars)
+7. wire_keywords: Comma-separated keywords for wire distribution
 
-Respond with valid JSON only.`;
+Respond with valid JSON only. No markdown, no code blocks.`;
 
-        const aiResponse = await fetch("https://api.lovable.dev/ai/chat", {
+        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${lovableApiKey}`
           },
           body: JSON.stringify({
-            model: "openai/gpt-5-mini",
+            model: "google/gemini-3-flash-preview",
             messages: [{ role: "user", content: aiPrompt }]
           })
         });
@@ -109,13 +111,24 @@ Respond with valid JSON only.`;
           const aiContent = aiData.choices?.[0]?.message?.content;
           if (aiContent) {
             try {
-              const parsed = JSON.parse(aiContent);
+              // Clean up the response in case it has markdown
+              let cleanContent = aiContent.trim();
+              if (cleanContent.startsWith('```json')) {
+                cleanContent = cleanContent.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+              } else if (cleanContent.startsWith('```')) {
+                cleanContent = cleanContent.replace(/^```\n?/, '').replace(/\n?```$/, '');
+              }
+              
+              const parsed = JSON.parse(cleanContent);
               generatedContent = { ...generatedContent, ...parsed };
               console.log("AI content generated successfully");
             } catch (parseError) {
-              console.log("Could not parse AI response, using defaults");
+              console.log("Could not parse AI response, using defaults:", parseError);
             }
           }
+        } else {
+          const errorText = await aiResponse.text();
+          console.log("AI API error:", aiResponse.status, errorText);
         }
       } catch (aiError) {
         console.log("AI generation failed, using defaults:", aiError);
@@ -130,6 +143,7 @@ Respond with valid JSON only.`;
         canonical_url,
         meta_title,
         meta_description,
+        twitter_post: generatedContent.twitter_post,
         linkedin_post: generatedContent.linkedin_post,
         instagram_caption: generatedContent.instagram_caption,
         pitch_email: generatedContent.pitch_email,
