@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.get-instagram-feed]
 verify_jwt = false
+
+[functions.sync-acwa-events]
+verify_jwt = false
