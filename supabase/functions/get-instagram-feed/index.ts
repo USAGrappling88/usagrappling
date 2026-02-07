@@ -34,12 +34,12 @@ serve(async (req: Request): Promise<Response> => {
       );
     }
 
-    // Parse limit from request (default 6)
-    let limit = 6;
+    // Parse limit from request (default 12)
+    let limit = 12;
     try {
       const body = await req.json();
       if (body.limit && typeof body.limit === "number") {
-        limit = Math.min(body.limit, 12); // Cap at 12
+        limit = Math.min(body.limit, 20); // Cap at 20
       }
     } catch {
       // No body or invalid JSON, use default
