@@ -157,6 +157,7 @@ const PressOps = () => {
   const [prForSocial, setPrForSocial] = useState<PressRelease | null>(null);
   const [selectedSocialPlatforms, setSelectedSocialPlatforms] = useState<string[]>([]);
   const [isPostingToTwitter, setIsPostingToTwitter] = useState(false);
+  const [isPostingToInstagram, setIsPostingToInstagram] = useState(false);
 
   // Edit social captions state
   const [editSocialOpen, setEditSocialOpen] = useState(false);
@@ -428,6 +429,30 @@ const PressOps = () => {
     },
   });
 
+  const postToInstagramMutation = useMutation({
+    mutationFn: async ({ id, customCaption, imageUrl }: { id: string; customCaption?: string; imageUrl: string }) => {
+      const { data, error } = await supabase.functions.invoke("post-to-instagram", {
+        body: { pressReleaseId: id, customCaption, imageUrl },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-press-releases"] });
+      toast.success("Posted to Instagram!", {
+        action: data?.postUrl ? {
+          label: "View Post",
+          onClick: () => window.open(data.postUrl, "_blank"),
+        } : undefined,
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to post to Instagram: ${error.message}`);
+    },
+  });
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
@@ -535,6 +560,14 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
 
   const handlePostToTwitter = async (pr: PressRelease, customText?: string) => {
     postToTwitterMutation.mutate({ id: pr.id, customText });
+  };
+
+  const handlePostToInstagram = async (pr: PressRelease, customCaption?: string) => {
+    if (!pr.og_image_url) {
+      toast.error("Instagram requires an image. Please add an OG image first.");
+      return;
+    }
+    postToInstagramMutation.mutate({ id: pr.id, customCaption, imageUrl: pr.og_image_url });
   };
 
   const handleOutletToggle = (outletId: string) => {
@@ -1248,9 +1281,17 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                         <Copy className="w-4 h-4 mr-2" />
                         Copy Caption
                       </Button>
-                      <Button disabled className="flex-1">
-                        <Instagram className="w-4 h-4 mr-2" />
-                        Post to Instagram (Coming Soon)
+                      <Button 
+                        className="flex-1"
+                        onClick={() => handlePostToInstagram(prForSocial)}
+                        disabled={postToInstagramMutation.isPending || !prForSocial.og_image_url}
+                      >
+                        {postToInstagramMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Instagram className="w-4 h-4 mr-2" />
+                        )}
+                        {prForSocial.og_image_url ? "Post to Instagram" : "No Image Available"}
                       </Button>
                     </div>
                   </TabsContent>
