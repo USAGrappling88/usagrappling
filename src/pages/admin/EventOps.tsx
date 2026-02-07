@@ -14,6 +14,7 @@ import {
   LogOut,
   ShieldAlert,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -82,6 +83,7 @@ const EventOps = () => {
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "archived">("upcoming");
+  const [isSyncing, setIsSyncing] = useState(false);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -241,6 +243,36 @@ const EventOps = () => {
     });
   };
 
+  const syncAcwaEvents = async () => {
+    setIsSyncing(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-acwa-events`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      
+      if (result.success) {
+        toast.success(result.message);
+        queryClient.invalidateQueries({ queryKey: ["admin-events"] });
+        queryClient.invalidateQueries({ queryKey: ["upcoming-events"] });
+      } else {
+        toast.error(`Sync failed: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error(`Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const openEditDialog = (event: Event) => {
     setSelectedEvent(event);
     setFormData({
@@ -306,6 +338,15 @@ const EventOps = () => {
             <p className="text-muted-foreground">Manage USA Grappling events</p>
           </div>
           <div className="flex gap-3">
+            <Button 
+              onClick={syncAcwaEvents} 
+              variant="outline"
+              disabled={isSyncing}
+              className="border-accent text-accent hover:bg-accent/10"
+            >
+              <RefreshCw className={cn("h-4 w-4 mr-2", isSyncing && "animate-spin")} />
+              {isSyncing ? "Syncing..." : "Sync ACWA Events"}
+            </Button>
             <Button onClick={() => setIsCreateOpen(true)} className="bg-primary">
               <Plus className="h-4 w-4 mr-2" />
               New Event
