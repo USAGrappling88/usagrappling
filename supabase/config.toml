@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.post-to-twitter]
 verify_jwt = false
+
+[functions.post-to-instagram]
+verify_jwt = false
