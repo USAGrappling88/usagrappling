@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          created_at: string
+          event_date: string
+          id: string
+          is_archived: boolean
+          location: string
+          name: string
+          notes: string | null
+          registration_url: string | null
+          state_abbr: string
+          style: Database["public"]["Enums"]["event_style"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_date: string
+          id?: string
+          is_archived?: boolean
+          location: string
+          name: string
+          notes?: string | null
+          registration_url?: string | null
+          state_abbr: string
+          style?: Database["public"]["Enums"]["event_style"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_date?: string
+          id?: string
+          is_archived?: boolean
+          location?: string
+          name?: string
+          notes?: string | null
+          registration_url?: string | null
+          state_abbr?: string
+          style?: Database["public"]["Enums"]["event_style"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       press_releases: {
         Row: {
           approval_note: string | null
@@ -153,6 +195,11 @@ export type Database = {
         | "submitted_manual"
         | "submitted_auto"
         | "published_on_wires"
+      event_style:
+        | "catch_wrestling"
+        | "college"
+        | "grappling"
+        | "sport_jiu_jitsu"
       press_release_status:
         | "draft"
         | "ready_for_review"
@@ -294,6 +341,12 @@ export const Constants = {
         "submitted_manual",
         "submitted_auto",
         "published_on_wires",
+      ],
+      event_style: [
+        "catch_wrestling",
+        "college",
+        "grappling",
+        "sport_jiu_jitsu",
       ],
       press_release_status: [
         "draft",

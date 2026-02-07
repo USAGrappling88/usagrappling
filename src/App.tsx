@@ -16,6 +16,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PressRelease from "./pages/PressRelease";
 import News from "./pages/News";
 import PressOps from "./pages/admin/PressOps";
+import EventOps from "./pages/admin/EventOps";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/news/:slug" element={<PressRelease />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/press-ops" element={<PressOps />} />
+            <Route path="/admin/event-ops" element={<EventOps />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
