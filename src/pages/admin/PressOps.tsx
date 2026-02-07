@@ -24,6 +24,7 @@ import {
   Linkedin,
   Instagram,
   AlertTriangle,
+  Pencil,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -88,6 +89,7 @@ interface PressRelease {
   utm_campaign: string | null;
   utm_source: string | null;
   utm_medium: string | null;
+  twitter_post: string | null;
   linkedin_post: string | null;
   instagram_caption: string | null;
   pitch_email: string | null;
@@ -154,6 +156,16 @@ const PressOps = () => {
   const [socialDialogOpen, setSocialDialogOpen] = useState(false);
   const [prForSocial, setPrForSocial] = useState<PressRelease | null>(null);
   const [selectedSocialPlatforms, setSelectedSocialPlatforms] = useState<string[]>([]);
+  const [isPostingToTwitter, setIsPostingToTwitter] = useState(false);
+
+  // Edit social captions state
+  const [editSocialOpen, setEditSocialOpen] = useState(false);
+  const [prToEdit, setPrToEdit] = useState<PressRelease | null>(null);
+  const [editedCaptions, setEditedCaptions] = useState({
+    twitter_post: "",
+    linkedin_post: "",
+    instagram_caption: "",
+  });
 
   // All hooks MUST be called before any conditional returns
   const { data: pressReleases, isLoading } = useQuery({
@@ -368,6 +380,54 @@ const PressOps = () => {
     },
   });
 
+  const updateCaptionsMutation = useMutation({
+    mutationFn: async ({ id, captions }: { id: string; captions: typeof editedCaptions }) => {
+      const { error } = await supabase
+        .from("press_releases")
+        .update({
+          twitter_post: captions.twitter_post,
+          linkedin_post: captions.linkedin_post,
+          instagram_caption: captions.instagram_caption,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-press-releases"] });
+      setEditSocialOpen(false);
+      setPrToEdit(null);
+      toast.success("Social captions updated!");
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to update captions: ${error.message}`);
+    },
+  });
+
+  const postToTwitterMutation = useMutation({
+    mutationFn: async ({ id, customText }: { id: string; customText?: string }) => {
+      const { data, error } = await supabase.functions.invoke("post-to-twitter", {
+        body: { pressReleaseId: id, customText },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-press-releases"] });
+      toast.success("Posted to Twitter!", {
+        action: data?.tweetUrl ? {
+          label: "View Tweet",
+          onClick: () => window.open(data.tweetUrl, "_blank"),
+        } : undefined,
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(`Failed to post to Twitter: ${error.message}`);
+    },
+  });
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
@@ -461,6 +521,20 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
     setPrForSocial(pr);
     setSelectedSocialPlatforms([]);
     setSocialDialogOpen(true);
+  };
+
+  const openEditSocialDialog = (pr: PressRelease) => {
+    setPrToEdit(pr);
+    setEditedCaptions({
+      twitter_post: pr.twitter_post || "",
+      linkedin_post: pr.linkedin_post || "",
+      instagram_caption: pr.instagram_caption || "",
+    });
+    setEditSocialOpen(true);
+  };
+
+  const handlePostToTwitter = async (pr: PressRelease, customText?: string) => {
+    postToTwitterMutation.mutate({ id: pr.id, customText });
   };
 
   const handleOutletToggle = (outletId: string) => {
@@ -1026,6 +1100,19 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
             </DialogHeader>
             {prForSocial && (
               <div className="space-y-6 py-4">
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      openEditSocialDialog(prForSocial);
+                      setSocialDialogOpen(false);
+                    }}
+                  >
+                    <Pencil className="w-4 h-4 mr-2" />
+                    Edit Captions
+                  </Button>
+                </div>
                 <Tabs defaultValue="twitter" className="w-full">
                   <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="twitter" className="flex items-center gap-2">
@@ -1054,9 +1141,7 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                             <span className="text-muted-foreground text-xs">@USAGrappling</span>
                           </div>
                           <p className="text-sm mt-2 whitespace-pre-wrap">
-                            {prForSocial.wire_summary || prForSocial.summary || "No summary available"}
-                            {"\n\n"}
-                            🔗 Read more: https://usagrappling.lovable.app/news/{prForSocial.slug}
+                            {prForSocial.twitter_post || prForSocial.wire_summary || prForSocial.summary || "No content available"}
                           </p>
                           {prForSocial.og_image_url && (
                             <img
@@ -1073,16 +1158,24 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
                         variant="outline" 
                         className="flex-1"
                         onClick={() => copyToClipboard(
-                          `${prForSocial.wire_summary || prForSocial.summary || ""}\n\n🔗 Read more: https://usagrappling.lovable.app/news/${prForSocial.slug}`,
+                          prForSocial.twitter_post || `${prForSocial.wire_summary || prForSocial.summary || ""}\n\n🔗 Read more: https://usagrappling.lovable.app/news/${prForSocial.slug}`,
                           "Twitter post"
                         )}
                       >
                         <Copy className="w-4 h-4 mr-2" />
                         Copy Text
                       </Button>
-                      <Button disabled className="flex-1">
-                        <Twitter className="w-4 h-4 mr-2" />
-                        Post to X (Coming Soon)
+                      <Button 
+                        className="flex-1"
+                        onClick={() => handlePostToTwitter(prForSocial)}
+                        disabled={postToTwitterMutation.isPending}
+                      >
+                        {postToTwitterMutation.isPending ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Twitter className="w-4 h-4 mr-2" />
+                        )}
+                        Post to X
                       </Button>
                     </div>
                   </TabsContent>
@@ -1167,6 +1260,83 @@ CANONICAL URL: ${pr.canonical_url || `https://www.usa-grappling.com/news/${pr.sl
             <DialogFooter>
               <Button variant="outline" onClick={() => setSocialDialogOpen(false)}>
                 Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Social Captions Dialog */}
+        <Dialog open={editSocialOpen} onOpenChange={setEditSocialOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Pencil className="w-5 h-5" />
+                Edit Social Captions
+              </DialogTitle>
+              <DialogDescription>
+                Edit the social media captions for this press release.
+              </DialogDescription>
+            </DialogHeader>
+            {prToEdit && (
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="twitter_post" className="flex items-center gap-2 mb-2">
+                    <Twitter className="w-4 h-4" />
+                    Twitter/X Post
+                  </Label>
+                  <Textarea
+                    id="twitter_post"
+                    value={editedCaptions.twitter_post}
+                    onChange={(e) => setEditedCaptions({ ...editedCaptions, twitter_post: e.target.value })}
+                    placeholder="Enter Twitter/X post content..."
+                    rows={4}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {editedCaptions.twitter_post.length}/280 characters
+                  </p>
+                </div>
+                <div>
+                  <Label htmlFor="linkedin_post" className="flex items-center gap-2 mb-2">
+                    <Linkedin className="w-4 h-4" />
+                    LinkedIn Post
+                  </Label>
+                  <Textarea
+                    id="linkedin_post"
+                    value={editedCaptions.linkedin_post}
+                    onChange={(e) => setEditedCaptions({ ...editedCaptions, linkedin_post: e.target.value })}
+                    placeholder="Enter LinkedIn post content..."
+                    rows={5}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="instagram_caption" className="flex items-center gap-2 mb-2">
+                    <Instagram className="w-4 h-4" />
+                    Instagram Caption
+                  </Label>
+                  <Textarea
+                    id="instagram_caption"
+                    value={editedCaptions.instagram_caption}
+                    onChange={(e) => setEditedCaptions({ ...editedCaptions, instagram_caption: e.target.value })}
+                    placeholder="Enter Instagram caption..."
+                    rows={5}
+                  />
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditSocialOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => prToEdit && updateCaptionsMutation.mutate({ id: prToEdit.id, captions: editedCaptions })}
+                disabled={updateCaptionsMutation.isPending}
+              >
+                {updateCaptionsMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                )}
+                Save Captions
               </Button>
             </DialogFooter>
           </DialogContent>
