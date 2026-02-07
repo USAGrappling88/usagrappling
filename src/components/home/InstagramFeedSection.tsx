@@ -1,13 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Instagram, ExternalLink, Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 
 interface InstagramPost {
   id: string;
@@ -24,7 +17,7 @@ export function InstagramFeedSection() {
     queryKey: ["instagram-feed"],
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("get-instagram-feed", {
-        body: { limit: 8 },
+        body: { limit: 12 },
       });
 
       if (error) throw error;
@@ -84,88 +77,67 @@ export function InstagramFeedSection() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
+            {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="aspect-square bg-muted rounded-xl animate-pulse"
+                className="aspect-square bg-muted rounded-lg animate-pulse"
               />
             ))}
           </div>
         )}
 
-        {/* Carousel */}
+        {/* Grid of Posts */}
         {!isLoading && posts.length > 0 && (
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full"
-          >
-            <CarouselContent className="-ml-4">
-              {posts.map((post) => (
-                <CarouselItem
-                  key={post.id}
-                  className="pl-4 basis-1/2 md:basis-1/3 lg:basis-1/4"
-                >
-                  <a
-                    href={post.permalink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block group"
-                  >
-                    <div className="relative aspect-square overflow-hidden rounded-xl bg-muted border border-border shadow-sm hover:shadow-md transition-all duration-300">
-                      {/* Image/Video Thumbnail */}
-                      <img
-                        src={
-                          post.media_type === "VIDEO"
-                            ? post.thumbnail_url || post.media_url
-                            : post.media_url
-                        }
-                        alt={truncateCaption(post.caption, 50) || "Instagram post"}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 md:gap-3">
+            {posts.map((post) => (
+              <a
+                key={post.id}
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
+                <div className="relative aspect-square overflow-hidden rounded-lg bg-muted border border-border/50 shadow-sm hover:shadow-md transition-all duration-300">
+                  {/* Image/Video Thumbnail */}
+                  <img
+                    src={
+                      post.media_type === "VIDEO"
+                        ? post.thumbnail_url || post.media_url
+                        : post.media_url
+                    }
+                    alt={truncateCaption(post.caption, 50) || "Instagram post"}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    loading="lazy"
+                  />
 
-                      {/* Video indicator */}
-                      {post.media_type === "VIDEO" && (
-                        <div className="absolute top-3 right-3 p-1.5 bg-foreground/80 rounded-full">
-                          <Play className="w-3 h-3 text-background fill-background" />
-                        </div>
-                      )}
-
-                      {/* Carousel indicator */}
-                      {post.media_type === "CAROUSEL_ALBUM" && (
-                        <div className="absolute top-3 right-3 p-1.5 bg-foreground/80 rounded-full">
-                          <svg
-                            className="w-3 h-3 text-background"
-                            fill="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
-                            <path d="M21 21H7V7h2v12h12z" opacity="0.5" />
-                          </svg>
-                        </div>
-                      )}
-
-                      {/* Hover overlay with caption */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-foreground/90 via-foreground/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                        <p className="text-background text-sm font-medium line-clamp-3">
-                          {truncateCaption(post.caption, 120) || "View on Instagram"}
-                        </p>
-                        <span className="text-background/70 text-xs mt-2">
-                          {formatDate(post.timestamp)}
-                        </span>
-                      </div>
+                  {/* Video indicator */}
+                  {post.media_type === "VIDEO" && (
+                    <div className="absolute top-1.5 right-1.5 p-1 bg-foreground/70 rounded-full">
+                      <Play className="w-2.5 h-2.5 text-background fill-background" />
                     </div>
-                  </a>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-4 bg-card border-border shadow-md hover:bg-muted" />
-            <CarouselNext className="hidden md:flex -right-4 bg-card border-border shadow-md hover:bg-muted" />
-          </Carousel>
+                  )}
+
+                  {/* Carousel indicator */}
+                  {post.media_type === "CAROUSEL_ALBUM" && (
+                    <div className="absolute top-1.5 right-1.5 p-1 bg-foreground/70 rounded-full">
+                      <svg
+                        className="w-2.5 h-2.5 text-background"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
+                        <path d="M21 21H7V7h2v12h12z" opacity="0.5" />
+                      </svg>
+                    </div>
+                  )}
+
+                  {/* Subtle hover overlay */}
+                  <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors duration-300" />
+                </div>
+              </a>
+            ))}
+          </div>
         )}
 
         {/* CTA */}
