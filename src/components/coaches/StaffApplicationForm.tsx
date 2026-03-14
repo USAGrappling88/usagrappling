@@ -13,28 +13,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, ChevronRight, ChevronLeft, Shield } from "lucide-react";
+import { CheckCircle2, ChevronRight, ChevronLeft, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-const STEPS = ["Personal Profile", "Technical Credentials", "Logistics & Payment"];
+const STEPS = ["Personal Profile", "Experience & Positions", "Logistics & Payment"];
 
-const BACKGROUNDS = ["Grappling", "Wrestling", "BJJ", "Judo", "Sambo", "Catch Wrestling"];
-const CERTIFICATIONS = [
-  "Sport Jiu-Jitsu",
-  "UWW Wrestling",
-  "Folkstyle Wrestling",
-  "UWW Grappling",
-  "Other",
+const POSITIONS = [
+  "Front Door",
+  "Inspector",
+  "Mat Coordinators",
+  "Podium",
+  "Runner",
+  "Security",
+  "Referee",
+  "Weigh In",
+  "Shirts",
+  "Scoretables",
+  "OTHER",
 ];
-const RULESETS = ["UWW Grappling", "NCGA Collegiate", "Submission Only"];
-const SMOOTHCOMP = ["Expert", "Intermediate", "Beginner", "No Experience"];
-const ROLES = ["Referee", "Pairing/Bracketing Official"];
+
 const SHIRT_SIZES = ["S", "M", "L", "XL", "2XL", "3XL"];
 const TRAVEL = ["Local Only", "Regional", "National/Travel Required"];
 const PAYMENT = ["Direct Deposit", "Zelle", "Venmo"];
 
-interface FormData {
+interface StaffFormData {
   fullName: string;
   email: string;
   phone: string;
@@ -42,13 +45,10 @@ interface FormData {
   membershipNumber: string;
   city: string;
   state: string;
-  primaryBackground: string;
-  certifications: string[];
-  certificationOther: string;
-  rulesetExpertise: string[];
-  smoothcomp: string;
+  workedWithUSAGBefore: string;
+  positions: string[];
+  positionOther: string;
   experience: string;
-  interestedRoles: string[];
   shirtSize: string;
   travelRadius: string;
   paymentMethod: string;
@@ -58,7 +58,7 @@ interface FormData {
   payZip: string;
 }
 
-const initialFormData: FormData = {
+const initialFormData: StaffFormData = {
   fullName: "",
   email: "",
   phone: "",
@@ -66,13 +66,10 @@ const initialFormData: FormData = {
   membershipNumber: "",
   city: "",
   state: "",
-  primaryBackground: "",
-  certifications: [],
-  certificationOther: "",
-  rulesetExpertise: [],
-  smoothcomp: "",
+  workedWithUSAGBefore: "",
+  positions: [],
+  positionOther: "",
   experience: "",
-  interestedRoles: [],
   shirtSize: "",
   travelRadius: "",
   paymentMethod: "",
@@ -82,10 +79,10 @@ const initialFormData: FormData = {
   payZip: "",
 };
 
-const OfficiateApplicationForm = () => {
+const StaffApplicationForm = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [formData, setFormData] = useState<StaffFormData>(initialFormData);
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
@@ -100,16 +97,16 @@ const OfficiateApplicationForm = () => {
     }, 100);
   };
 
-  const updateField = (field: keyof FormData, value: string) => {
+  const updateField = (field: keyof StaffFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const toggleArrayField = (field: "certifications" | "rulesetExpertise" | "interestedRoles", value: string) => {
+  const togglePosition = (value: string) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: (prev[field] as string[]).includes(value)
-        ? (prev[field] as string[]).filter((v) => v !== value)
-        : [...(prev[field] as string[]), value],
+      positions: prev.positions.includes(value)
+        ? prev.positions.filter((v) => v !== value)
+        : [...prev.positions, value],
     }));
   };
 
@@ -125,17 +122,17 @@ const OfficiateApplicationForm = () => {
       }
     }
     if (step === 1) {
-      if (!formData.primaryBackground || formData.certifications.length === 0 || !formData.smoothcomp || formData.rulesetExpertise.length === 0) {
-        toast({ title: "Required fields missing", description: "Please complete all credential fields.", variant: "destructive" });
+      if (!formData.workedWithUSAGBefore || formData.positions.length === 0) {
+        toast({ title: "Required fields missing", description: "Please select your experience and positions.", variant: "destructive" });
         return false;
       }
-      if (formData.certifications.includes("Other") && !formData.certificationOther.trim()) {
-        toast({ title: "Required field", description: "Please specify your other certification.", variant: "destructive" });
+      if (formData.positions.includes("OTHER") && !formData.positionOther.trim()) {
+        toast({ title: "Required field", description: "Please specify your other position.", variant: "destructive" });
         return false;
       }
     }
     if (step === 2) {
-      if (formData.interestedRoles.length === 0 || !formData.shirtSize || !formData.travelRadius || !formData.paymentMethod) {
+      if (!formData.shirtSize || !formData.travelRadius || !formData.paymentMethod) {
         toast({ title: "Required fields missing", description: "Please complete all logistics fields.", variant: "destructive" });
         return false;
       }
@@ -161,7 +158,7 @@ const OfficiateApplicationForm = () => {
     setSubmitting(true);
     try {
       const { error } = await supabase.from("staff_applications").insert({
-        application_type: "officiate" as const,
+        application_type: "staff" as const,
         full_name: formData.fullName.trim(),
         email: formData.email.trim(),
         phone: formData.phone.trim(),
@@ -169,13 +166,11 @@ const OfficiateApplicationForm = () => {
         membership_number: formData.membershipNumber.trim() || null,
         city: formData.city.trim(),
         state: formData.state.trim(),
-        primary_background: formData.primaryBackground,
-        certifications: formData.certifications,
-        certification_other: formData.certifications.includes("Other") ? formData.certificationOther.trim() : null,
-        ruleset_expertise: formData.rulesetExpertise,
-        smoothcomp: formData.smoothcomp,
+        worked_with_usag_before: formData.workedWithUSAGBefore === "yes",
+        positions: formData.positions.includes("OTHER")
+          ? [...formData.positions.filter((p) => p !== "OTHER"), formData.positionOther.trim()]
+          : formData.positions,
         experience: formData.experience.trim() || null,
-        interested_roles: formData.interestedRoles,
         shirt_size: formData.shirtSize,
         travel_radius: formData.travelRadius,
         payment_method: formData.paymentMethod,
@@ -206,20 +201,8 @@ const OfficiateApplicationForm = () => {
                 Application Received
               </h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Thank you for your interest in officiating with USA Grappling. Our team will review your application and reach out within 5–7 business days.
+                Thank you for applying to work with USA Grappling tournament operations. We'll review your application and contact you soon.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-                <Button asChild variant="default" size="lg">
-                  <a href="https://www.usagrappling.com/membership" target="_blank" rel="noopener noreferrer">
-                    Grappling Leader Membership
-                  </a>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <a href="https://www.usagrappling.com/rules" target="_blank" rel="noopener noreferrer">
-                    Official Rules & Regulations
-                  </a>
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -228,23 +211,24 @@ const OfficiateApplicationForm = () => {
   }
 
   return (
-    <section id="officiate-form" className="py-12 md:py-16 bg-secondary/50">
+    <section id="staff-form" className="py-12 md:py-16 bg-background">
       <div className="container mx-auto px-4">
         {!isOpen && (
           <div className="max-w-2xl mx-auto text-center space-y-4">
-            <Shield className="h-12 w-12 text-primary mx-auto" />
+            <Users className="h-12 w-12 text-accent mx-auto" />
             <h2 className="font-display text-2xl md:text-3xl font-bold text-foreground">
-              Referee & Official Application
+              Tournament Operations & Staff
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Apply to become a certified USA Grappling referee or pairing official.
+              Interested in working tournament operations? Apply below to join our event staff team.
             </p>
             <Button
               size="lg"
               onClick={handleOpen}
-              className="mt-4 text-base font-bold tracking-wide px-10 py-6 w-full sm:w-auto"
+              variant="outline"
+              className="mt-4 text-base font-bold tracking-wide px-10 py-6 w-full sm:w-auto border-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
             >
-              APPLY TO OFFICIATE
+              APPLY FOR STAFF
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
@@ -269,103 +253,81 @@ const OfficiateApplicationForm = () => {
                 {step === 0 && (
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="off-fullName">Full Name *</Label>
-                      <Input id="off-fullName" value={formData.fullName} onChange={(e) => updateField("fullName", e.target.value)} placeholder="John Doe" maxLength={100} />
+                      <Label htmlFor="staff-fullName">Full Name *</Label>
+                      <Input id="staff-fullName" value={formData.fullName} onChange={(e) => updateField("fullName", e.target.value)} placeholder="John Doe" maxLength={100} />
                     </div>
                     <div>
-                      <Label htmlFor="off-email">Email Address *</Label>
-                      <Input id="off-email" type="email" value={formData.email} onChange={(e) => updateField("email", e.target.value)} placeholder="john@example.com" maxLength={255} />
+                      <Label htmlFor="staff-email">Email Address *</Label>
+                      <Input id="staff-email" type="email" value={formData.email} onChange={(e) => updateField("email", e.target.value)} placeholder="john@example.com" maxLength={255} />
                     </div>
                     <div>
-                      <Label htmlFor="off-phone">Phone Number *</Label>
-                      <Input id="off-phone" type="tel" value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="(555) 123-4567" maxLength={20} />
+                      <Label htmlFor="staff-phone">Phone Number *</Label>
+                      <Input id="staff-phone" type="tel" value={formData.phone} onChange={(e) => updateField("phone", e.target.value)} placeholder="(555) 123-4567" maxLength={20} />
                     </div>
                     <div>
-                      <Label htmlFor="off-dob">Date of Birth *</Label>
-                      <Input id="off-dob" type="date" value={formData.dob} onChange={(e) => updateField("dob", e.target.value)} />
+                      <Label htmlFor="staff-dob">Date of Birth *</Label>
+                      <Input id="staff-dob" type="date" value={formData.dob} onChange={(e) => updateField("dob", e.target.value)} />
                     </div>
                     <div>
-                      <Label htmlFor="off-membershipNumber">USA Grappling Membership # (Optional)</Label>
-                      <Input id="off-membershipNumber" value={formData.membershipNumber} onChange={(e) => updateField("membershipNumber", e.target.value)} placeholder="e.g. USAG-12345" maxLength={30} />
+                      <Label htmlFor="staff-membershipNumber">USA Grappling Membership # (Optional)</Label>
+                      <Input id="staff-membershipNumber" value={formData.membershipNumber} onChange={(e) => updateField("membershipNumber", e.target.value)} placeholder="e.g. USAG-12345" maxLength={30} />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="off-city">City *</Label>
-                        <Input id="off-city" value={formData.city} onChange={(e) => updateField("city", e.target.value)} placeholder="City" maxLength={100} />
+                        <Label htmlFor="staff-city">City *</Label>
+                        <Input id="staff-city" value={formData.city} onChange={(e) => updateField("city", e.target.value)} placeholder="City" maxLength={100} />
                       </div>
                       <div>
-                        <Label htmlFor="off-state">State *</Label>
-                        <Input id="off-state" value={formData.state} onChange={(e) => updateField("state", e.target.value)} placeholder="State" maxLength={50} />
+                        <Label htmlFor="staff-state">State *</Label>
+                        <Input id="staff-state" value={formData.state} onChange={(e) => updateField("state", e.target.value)} placeholder="State" maxLength={50} />
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Step 2: Technical Credentials */}
+                {/* Step 2: Experience & Positions */}
                 {step === 1 && (
                   <div className="space-y-4">
                     <div>
-                      <Label>Primary Background *</Label>
-                      <Select value={formData.primaryBackground} onValueChange={(v) => updateField("primaryBackground", v)}>
-                        <SelectTrigger><SelectValue placeholder="Select background" /></SelectTrigger>
+                      <Label>Have you worked with USA Grappling before? *</Label>
+                      <Select value={formData.workedWithUSAGBefore} onValueChange={(v) => updateField("workedWithUSAGBefore", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
                         <SelectContent>
-                          {BACKGROUNDS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>Official Certification(s) * <span className="text-muted-foreground text-xs font-normal">(select all that apply)</span></Label>
+                      <Label>What position(s) do you have experience in? * <span className="text-muted-foreground text-xs font-normal">(select all that apply)</span></Label>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                        {CERTIFICATIONS.map((c) => (
-                          <label key={c} className="flex items-center gap-2 cursor-pointer">
+                        {POSITIONS.map((p) => (
+                          <label key={p} className="flex items-center gap-2 cursor-pointer">
                             <Checkbox
-                              checked={formData.certifications.includes(c)}
-                              onCheckedChange={() => toggleArrayField("certifications", c)}
+                              checked={formData.positions.includes(p)}
+                              onCheckedChange={() => togglePosition(p)}
                             />
-                            <span className="text-sm text-foreground">{c}</span>
+                            <span className="text-sm text-foreground">{p}</span>
                           </label>
                         ))}
                       </div>
-                      {formData.certifications.includes("Other") && (
+                      {formData.positions.includes("OTHER") && (
                         <Input
                           className="mt-2"
-                          value={formData.certificationOther}
-                          onChange={(e) => updateField("certificationOther", e.target.value)}
-                          placeholder="Please specify your certification"
+                          value={formData.positionOther}
+                          onChange={(e) => updateField("positionOther", e.target.value)}
+                          placeholder="Please specify your position"
                           maxLength={100}
                         />
                       )}
                     </div>
                     <div>
-                      <Label>Ruleset Expertise *</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                        {RULESETS.map((r) => (
-                          <label key={r} className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              checked={formData.rulesetExpertise.includes(r)}
-                              onCheckedChange={() => toggleArrayField("rulesetExpertise", r)}
-                            />
-                            <span className="text-sm text-foreground">{r}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Smoothcomp Knowledge *</Label>
-                      <Select value={formData.smoothcomp} onValueChange={(v) => updateField("smoothcomp", v)}>
-                        <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
-                        <SelectContent>
-                          {SMOOTHCOMP.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="off-experience">Relevant Experience</Label>
+                      <Label htmlFor="staff-experience">Additional Experience / Notes</Label>
                       <Textarea
-                        id="off-experience"
+                        id="staff-experience"
                         value={formData.experience}
                         onChange={(e) => updateField("experience", e.target.value)}
-                        placeholder="Briefly list your recent officiating highlights"
+                        placeholder="Briefly describe your relevant event or tournament experience"
                         maxLength={1000}
                         rows={4}
                       />
@@ -377,21 +339,7 @@ const OfficiateApplicationForm = () => {
                 {step === 2 && (
                   <div className="space-y-4">
                     <div>
-                      <Label>Interested Roles *</Label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
-                        {ROLES.map((r) => (
-                          <label key={r} className="flex items-center gap-2 cursor-pointer">
-                            <Checkbox
-                              checked={formData.interestedRoles.includes(r)}
-                              onCheckedChange={() => toggleArrayField("interestedRoles", r)}
-                            />
-                            <span className="text-sm text-foreground">{r}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Official 'Grappling Leader' Shirt Size *</Label>
+                      <Label>Shirt Size *</Label>
                       <Select value={formData.shirtSize} onValueChange={(v) => updateField("shirtSize", v)}>
                         <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
                         <SelectContent>
@@ -423,21 +371,21 @@ const OfficiateApplicationForm = () => {
                       <p className="font-display font-bold text-foreground text-sm mb-3">Paycheck Processing Information</p>
                       <div className="space-y-3">
                         <div>
-                          <Label htmlFor="off-payAddress">Address *</Label>
-                          <Input id="off-payAddress" value={formData.payAddress} onChange={(e) => updateField("payAddress", e.target.value)} placeholder="Street address" maxLength={200} />
+                          <Label htmlFor="staff-payAddress">Address *</Label>
+                          <Input id="staff-payAddress" value={formData.payAddress} onChange={(e) => updateField("payAddress", e.target.value)} placeholder="Street address" maxLength={200} />
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                           <div>
-                            <Label htmlFor="off-payCity">City *</Label>
-                            <Input id="off-payCity" value={formData.payCity} onChange={(e) => updateField("payCity", e.target.value)} placeholder="City" maxLength={100} />
+                            <Label htmlFor="staff-payCity">City *</Label>
+                            <Input id="staff-payCity" value={formData.payCity} onChange={(e) => updateField("payCity", e.target.value)} placeholder="City" maxLength={100} />
                           </div>
                           <div>
-                            <Label htmlFor="off-payState">State *</Label>
-                            <Input id="off-payState" value={formData.payState} onChange={(e) => updateField("payState", e.target.value)} placeholder="State" maxLength={50} />
+                            <Label htmlFor="staff-payState">State *</Label>
+                            <Input id="staff-payState" value={formData.payState} onChange={(e) => updateField("payState", e.target.value)} placeholder="State" maxLength={50} />
                           </div>
                           <div>
-                            <Label htmlFor="off-payZip">Zip Code *</Label>
-                            <Input id="off-payZip" value={formData.payZip} onChange={(e) => updateField("payZip", e.target.value)} placeholder="Zip" maxLength={10} />
+                            <Label htmlFor="staff-payZip">Zip Code *</Label>
+                            <Input id="staff-payZip" value={formData.payZip} onChange={(e) => updateField("payZip", e.target.value)} placeholder="Zip" maxLength={10} />
                           </div>
                         </div>
                       </div>
@@ -469,4 +417,4 @@ const OfficiateApplicationForm = () => {
   );
 };
 
-export default OfficiateApplicationForm;
+export default StaffApplicationForm;
