@@ -65,7 +65,7 @@ interface Application {
 }
 
 const StaffOps = () => {
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: authLoading } = useAuth();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
