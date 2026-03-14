@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import safecoachScreenshot from "@/assets/safecoach-screenshot.png";
+import OfficiateApplicationForm from "@/components/coaches/OfficiateApplicationForm";
 
 const SAFECOACH_SIGNUP_URL = "https://app.safecoachbackgroundchecks.com/signup/org/USAGRAPPLING";
 const SAFECOACH_LOGIN_URL = "https://app.safecoachbackgroundchecks.com";
@@ -112,6 +113,9 @@ const CoachesOfficials = () => {
           </div>
         </div>
       </section>
+
+      {/* Officiate Application */}
+      <OfficiateApplicationForm />
 
       {/* Compliance Alert */}
       <section className="py-12 md:py-16 bg-background">
