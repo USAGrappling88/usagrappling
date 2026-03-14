@@ -152,6 +152,105 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_applications: {
+        Row: {
+          admin_grade: number | null
+          admin_notes: string | null
+          application_type: Database["public"]["Enums"]["application_type"]
+          certification_other: string | null
+          certifications: string[] | null
+          city: string
+          created_at: string
+          dob: string
+          email: string
+          experience: string | null
+          full_name: string
+          id: string
+          interested_roles: string[] | null
+          membership_number: string | null
+          pay_address: string | null
+          pay_city: string | null
+          pay_state: string | null
+          pay_zip: string | null
+          payment_method: string | null
+          phone: string
+          positions: string[] | null
+          primary_background: string | null
+          ruleset_expertise: string[] | null
+          shirt_size: string | null
+          smoothcomp: string | null
+          state: string
+          status: string
+          travel_radius: string | null
+          updated_at: string
+          worked_with_usag_before: boolean | null
+        }
+        Insert: {
+          admin_grade?: number | null
+          admin_notes?: string | null
+          application_type: Database["public"]["Enums"]["application_type"]
+          certification_other?: string | null
+          certifications?: string[] | null
+          city: string
+          created_at?: string
+          dob: string
+          email: string
+          experience?: string | null
+          full_name: string
+          id?: string
+          interested_roles?: string[] | null
+          membership_number?: string | null
+          pay_address?: string | null
+          pay_city?: string | null
+          pay_state?: string | null
+          pay_zip?: string | null
+          payment_method?: string | null
+          phone: string
+          positions?: string[] | null
+          primary_background?: string | null
+          ruleset_expertise?: string[] | null
+          shirt_size?: string | null
+          smoothcomp?: string | null
+          state: string
+          status?: string
+          travel_radius?: string | null
+          updated_at?: string
+          worked_with_usag_before?: boolean | null
+        }
+        Update: {
+          admin_grade?: number | null
+          admin_notes?: string | null
+          application_type?: Database["public"]["Enums"]["application_type"]
+          certification_other?: string | null
+          certifications?: string[] | null
+          city?: string
+          created_at?: string
+          dob?: string
+          email?: string
+          experience?: string | null
+          full_name?: string
+          id?: string
+          interested_roles?: string[] | null
+          membership_number?: string | null
+          pay_address?: string | null
+          pay_city?: string | null
+          pay_state?: string | null
+          pay_zip?: string | null
+          payment_method?: string | null
+          phone?: string
+          positions?: string[] | null
+          primary_background?: string | null
+          ruleset_expertise?: string[] | null
+          shirt_size?: string | null
+          smoothcomp?: string | null
+          state?: string
+          status?: string
+          travel_radius?: string | null
+          updated_at?: string
+          worked_with_usag_before?: boolean | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -188,6 +287,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      application_type: "officiate" | "staff"
       distribution_status:
         | "not_started"
         | "prepared"
@@ -334,6 +434,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      application_type: ["officiate", "staff"],
       distribution_status: [
         "not_started",
         "prepared",
