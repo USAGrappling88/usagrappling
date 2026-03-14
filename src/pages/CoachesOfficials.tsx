@@ -114,6 +114,9 @@ const CoachesOfficials = () => {
         </div>
       </section>
 
+      {/* Officiate Application */}
+      <OfficiateApplicationForm />
+
       {/* Compliance Alert */}
       <section className="py-12 md:py-16 bg-background">
         <div className="container mx-auto px-4">
