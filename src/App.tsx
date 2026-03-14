@@ -17,6 +17,7 @@ import PressRelease from "./pages/PressRelease";
 import News from "./pages/News";
 import PressOps from "./pages/admin/PressOps";
 import EventOps from "./pages/admin/EventOps";
+import StaffOps from "./pages/admin/StaffOps";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
