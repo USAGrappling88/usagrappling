@@ -46,6 +46,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin/press-ops" element={<PressOps />} />
             <Route path="/admin/event-ops" element={<EventOps />} />
+            <Route path="/admin/staff-ops" element={<StaffOps />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
