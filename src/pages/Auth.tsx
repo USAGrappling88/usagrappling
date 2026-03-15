@@ -158,13 +158,19 @@ const Auth = () => {
                       <p className="text-sm text-destructive">{errors.password}</p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : null}
-                    Sign In
-                  </Button>
-                </form>
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : null}
+                      Sign In
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="w-full text-sm text-primary hover:underline"
+                    >
+                      Forgot your password?
+                    </button>
               </TabsContent>
               
               <TabsContent value="signup">
