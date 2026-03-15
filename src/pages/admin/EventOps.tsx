@@ -67,6 +67,17 @@ interface Event {
   updated_at: string;
 }
 
+const parseDateOnly = (dateString: string) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const toStartOfDay = (date: Date) => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
+
 export const EventPanel = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
@@ -102,12 +113,10 @@ export const EventPanel = () => {
     enabled: !!user && isAdmin,
   });
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
+  const today = toStartOfDay(new Date());
+
   const filteredEvents = events?.filter((event) => {
-    const eventDate = new Date(event.event_date);
-    eventDate.setHours(0, 0, 0, 0);
+    const eventDate = toStartOfDay(parseDateOnly(event.event_date));
     if (activeTab === "archived") return event.is_archived;
     if (activeTab === "past") return !event.is_archived && eventDate < today;
     return !event.is_archived && eventDate >= today;
@@ -251,10 +260,9 @@ export const EventPanel = () => {
 
   const openEditDialog = (event: Event) => {
     setSelectedEvent(event);
-    const [year, month, day] = event.event_date.split("-").map(Number);
     setFormData({
       name: event.name,
-      event_date: new Date(year, month - 1, day),
+      event_date: parseDateOnly(event.event_date),
       location: event.location,
       notes: event.notes || "",
       registration_url: event.registration_url || "",
@@ -292,7 +300,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
-              {events?.filter(e => !e.is_archived && new Date(e.event_date) >= today).length || 0}
+              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) >= today).length || 0}
             </div>
           </CardContent>
         </Card>
@@ -302,7 +310,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-accent">
-              {events?.filter(e => !e.is_archived && new Date(e.event_date) < today).length || 0}
+              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) < today).length || 0}
             </div>
           </CardContent>
         </Card>
@@ -364,7 +372,7 @@ export const EventPanel = () => {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
-                              {format(new Date(event.event_date), "MMM d, yyyy")}
+                              {format(parseDateOnly(event.event_date), "MMM d, yyyy")}
                             </div>
                           </TableCell>
                           <TableCell>
