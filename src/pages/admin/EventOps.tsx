@@ -289,7 +289,7 @@ const EventOps = () => {
   // Redirect if not admin
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate('/auth?redirect=/admin/event-ops');
     }
   }, [user, authLoading, navigate]);
 

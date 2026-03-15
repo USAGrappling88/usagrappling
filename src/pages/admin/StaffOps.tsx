@@ -150,7 +150,7 @@ const StaffOps = () => {
   };
 
   if (authLoading) return <Layout><div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Loading...</div></Layout>;
-  if (!isAdmin) return <Navigate to="/auth" replace />;
+  if (!isAdmin) return <Navigate to="/auth?redirect=/admin/staff-ops" replace />;
 
   // Apply filters
   let filtered = [...applications];
