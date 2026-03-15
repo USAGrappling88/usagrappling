@@ -28,9 +28,12 @@ const Auth = () => {
     if (user && !isLoading) {
       const params = new URLSearchParams(window.location.search);
       const redirectTo = params.get('redirect') || '/admin/press-ops';
+      const isAdminRoute = redirectTo.startsWith('/admin');
+
+      if (isAdminRoute && !isAdmin) return;
       navigate(redirectTo);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isAdmin, isLoading, navigate]);
 
   const validateForm = () => {
     const result = authSchema.safeParse({ email, password });
