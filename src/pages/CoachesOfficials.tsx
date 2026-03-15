@@ -11,6 +11,12 @@ const SAFECOACH_LOGIN_URL = "https://app.safecoachbackgroundchecks.com";
 const CoachesOfficials = () => {
   return (
     <Layout>
+      {/* Referee & Official Application */}
+      <OfficiateApplicationForm />
+
+      {/* Tournament Staff Application */}
+      <StaffApplicationForm />
+
       {/* Hero */}
       <section className="py-12 md:py-16 bg-background">
         <div className="container mx-auto px-4">
@@ -114,12 +120,6 @@ const CoachesOfficials = () => {
           </div>
         </div>
       </section>
-
-      {/* Referee & Official Application */}
-      <OfficiateApplicationForm />
-
-      {/* Tournament Staff Application */}
-      <StaffApplicationForm />
 
       {/* Compliance Alert */}
       <section className="py-12 md:py-16 bg-background">
