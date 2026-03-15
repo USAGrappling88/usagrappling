@@ -118,4 +118,10 @@ export const EVENT_STYLE_CONFIG: Record<string, { label: string; bgClass: string
     textClass: "text-background",
     borderClass: "border-muted-foreground",
   },
+  wrestling: {
+    label: "Wrestling",
+    bgClass: "bg-destructive",
+    textClass: "text-destructive-foreground",
+    borderClass: "border-destructive",
+  },
 };

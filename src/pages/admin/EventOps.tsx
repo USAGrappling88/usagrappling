@@ -51,7 +51,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { getStateAbbreviation, EVENT_STYLE_CONFIG } from "@/lib/stateAbbreviations";
 
-type EventStyle = "catch_wrestling" | "college" | "grappling" | "sport_jiu_jitsu";
+type EventStyle = "catch_wrestling" | "college" | "grappling" | "sport_jiu_jitsu" | "wrestling";
 
 interface Event {
   id: string;

@@ -324,6 +324,7 @@ export type Database = {
         | "college"
         | "grappling"
         | "sport_jiu_jitsu"
+        | "wrestling"
       press_release_status:
         | "draft"
         | "ready_for_review"
@@ -472,6 +473,7 @@ export const Constants = {
         "college",
         "grappling",
         "sport_jiu_jitsu",
+        "wrestling",
       ],
       press_release_status: [
         "draft",

@@ -1,0 +1,1 @@
+ALTER TYPE public.event_style ADD VALUE IF NOT EXISTS 'wrestling';
