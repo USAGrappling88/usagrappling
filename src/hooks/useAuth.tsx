@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const admin = await checkAdminRole(nextUserId);
+      const admin = await checkAdminRole(currentSession.user.id);
       setIsAdmin(admin);
       checkedAdminUserIdRef.current = nextUserId;
       setIsLoading(false);
