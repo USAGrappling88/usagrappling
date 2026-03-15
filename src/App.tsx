@@ -17,6 +17,7 @@ import PressRelease from "./pages/PressRelease";
 import News from "./pages/News";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<PressRelease />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/press-ops" element={<Navigate to="/admin" replace />} />
             <Route path="/admin/event-ops" element={<Navigate to="/admin" replace />} />

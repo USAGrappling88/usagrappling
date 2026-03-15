@@ -8,8 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Mail, Lock, ShieldCheck } from 'lucide-react';
+import { Loader2, Mail, Lock, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const authSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -22,6 +23,7 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
   useEffect(() => {
@@ -98,6 +100,70 @@ const Auth = () => {
     );
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error('Please enter your email address');
+      return;
+    }
+    setIsSubmitting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setIsSubmitting(false);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Password reset link sent! Check your email.');
+      setShowForgotPassword(false);
+    }
+  };
+
+  if (showForgotPassword) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center py-12 px-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl font-bold">Reset Password</CardTitle>
+              <CardDescription>Enter your email to receive a reset link</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="reset-email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      id="reset-email"
+                      type="email"
+                      placeholder="admin@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Send Reset Link
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(false)}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
+                >
+                  <ArrowLeft className="w-3 h-3" /> Back to Sign In
+                </button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="min-h-[60vh] flex items-center justify-center py-12 px-4">
@@ -162,6 +228,13 @@ const Auth = () => {
                     ) : null}
                     Sign In
                   </Button>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="w-full text-sm text-primary hover:underline"
+                  >
+                    Forgot your password?
+                  </button>
                 </form>
               </TabsContent>
               
@@ -208,7 +281,7 @@ const Auth = () => {
                     Create Account
                   </Button>
                   <p className="text-xs text-muted-foreground text-center">
-                    Note: New accounts require admin approval to access Press Operations.
+                    Note: New accounts require admin approval before access is granted.
                   </p>
                 </form>
               </TabsContent>

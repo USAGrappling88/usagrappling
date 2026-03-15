@@ -4,10 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
+import { UserManagementPanel } from "./UserManagement";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -65,11 +66,15 @@ const AdminDashboard = () => {
             <TabsTrigger value="staff" className="flex items-center gap-2">
               <Users className="w-4 h-4" /> Staff
             </TabsTrigger>
+            <TabsTrigger value="users" className="flex items-center gap-2">
+              <UserCog className="w-4 h-4" /> Users
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
+          <TabsContent value="users"><UserManagementPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
