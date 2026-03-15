@@ -63,7 +63,9 @@ const Auth = () => {
       }
     } else {
       toast.success('Signed in successfully!');
-      navigate('/admin/press-ops');
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirect') || '/admin/press-ops';
+      navigate(redirectTo);
     }
   };
 
