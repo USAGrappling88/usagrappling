@@ -300,7 +300,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
-              {events?.filter(e => !e.is_archived && new Date(e.event_date) >= today).length || 0}
+              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) >= today).length || 0}
             </div>
           </CardContent>
         </Card>
