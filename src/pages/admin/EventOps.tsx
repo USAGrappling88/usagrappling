@@ -67,6 +67,17 @@ interface Event {
   updated_at: string;
 }
 
+const parseDateOnly = (dateString: string) => {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const toStartOfDay = (date: Date) => {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+};
+
 export const EventPanel = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
@@ -102,12 +113,10 @@ export const EventPanel = () => {
     enabled: !!user && isAdmin,
   });
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
+  const today = toStartOfDay(new Date());
+
   const filteredEvents = events?.filter((event) => {
-    const eventDate = new Date(event.event_date);
-    eventDate.setHours(0, 0, 0, 0);
+    const eventDate = toStartOfDay(parseDateOnly(event.event_date));
     if (activeTab === "archived") return event.is_archived;
     if (activeTab === "past") return !event.is_archived && eventDate < today;
     return !event.is_archived && eventDate >= today;
