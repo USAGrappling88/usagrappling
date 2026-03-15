@@ -27,7 +27,7 @@ const Auth = () => {
   useEffect(() => {
     if (user && !isLoading) {
       const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get('redirect') || '/admin/press-ops';
+      const redirectTo = params.get('redirect') || '/admin';
       const isAdminRoute = redirectTo.startsWith('/admin');
 
       if (isAdminRoute && !isAdmin) return;
@@ -110,7 +110,7 @@ const Auth = () => {
             </div>
             <CardTitle className="text-2xl font-bold">Admin Access</CardTitle>
             <CardDescription>
-              Sign in to access the Press Operations dashboard
+              Sign in to access the Admin Dashboard
             </CardDescription>
           </CardHeader>
           <CardContent>
