@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const previousUserIdRef = useRef<string | null>(null);
+  const checkedAdminUserIdRef = useRef<string | null>(null);
 
   const checkAdminRole = async (userId: string) => {
     const { data, error } = await supabase
