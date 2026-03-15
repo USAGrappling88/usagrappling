@@ -260,10 +260,9 @@ export const EventPanel = () => {
 
   const openEditDialog = (event: Event) => {
     setSelectedEvent(event);
-    const [year, month, day] = event.event_date.split("-").map(Number);
     setFormData({
       name: event.name,
-      event_date: new Date(year, month - 1, day),
+      event_date: parseDateOnly(event.event_date),
       location: event.location,
       notes: event.notes || "",
       registration_url: event.registration_url || "",
