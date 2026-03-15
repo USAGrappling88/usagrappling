@@ -372,7 +372,7 @@ export const EventPanel = () => {
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-2">
                               <Calendar className="h-4 w-4 text-muted-foreground" />
-                              {format(new Date(event.event_date), "MMM d, yyyy")}
+                              {format(parseDateOnly(event.event_date), "MMM d, yyyy")}
                             </div>
                           </TableCell>
                           <TableCell>
