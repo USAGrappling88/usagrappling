@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
-import { Layout } from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,23 +61,21 @@ interface Application {
   status: string;
 }
 
-const StaffOps = () => {
-  const { isAdmin, isLoading: authLoading } = useAuth();
+export const StaffPanel = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const { toast } = useToast();
 
-  // Filters
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [sortBy, setSortBy] = useState<string>("newest");
 
   useEffect(() => {
-    if (isAdmin) fetchApplications();
-  }, [isAdmin]);
+    fetchApplications();
+  }, []);
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -149,10 +144,6 @@ const StaffOps = () => {
     }
   };
 
-  if (authLoading) return <Layout><div className="container mx-auto px-4 py-20 text-center text-muted-foreground">Loading...</div></Layout>;
-  if (!isAdmin) return <Navigate to="/auth?redirect=/admin/staff-ops" replace />;
-
-  // Apply filters
   let filtered = [...applications];
   if (typeFilter !== "all") filtered = filtered.filter((a) => a.application_type === typeFilter);
   if (stateFilter) filtered = filtered.filter((a) => a.state.toLowerCase().includes(stateFilter.toLowerCase()));
@@ -176,132 +167,125 @@ const StaffOps = () => {
   };
 
   return (
-    <Layout>
-      <section className="py-8 md:py-12 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground">Staff & Official Applications</h1>
-            <Badge variant="secondary" className="text-sm">{filtered.length} applications</Badge>
+    <>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <h2 className="font-display text-2xl font-bold text-foreground">Staff & Official Applications</h2>
+        <Badge variant="secondary" className="text-sm">{filtered.length} applications</Badge>
+      </div>
+
+      <Card className="mb-6">
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                placeholder="Search name, email, position..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger>
+                <Filter className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="officiate">Officials / Referees</SelectItem>
+                <SelectItem value="staff">Tournament Staff</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Filter by state..."
+              value={stateFilter}
+              onChange={(e) => setStateFilter(e.target.value)}
+            />
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger><SelectValue placeholder="Sort by" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest First</SelectItem>
+                <SelectItem value="oldest">Oldest First</SelectItem>
+                <SelectItem value="grade_high">Highest Grade</SelectItem>
+                <SelectItem value="grade_low">Lowest Grade</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    className="pl-9"
-                    placeholder="Search name, email, position..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="officiate">Officials / Referees</SelectItem>
-                    <SelectItem value="staff">Tournament Staff</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  placeholder="Filter by state..."
-                  value={stateFilter}
-                  onChange={(e) => setStateFilter(e.target.value)}
-                />
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger><SelectValue placeholder="Sort by" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
-                    <SelectItem value="grade_high">Highest Grade</SelectItem>
-                    <SelectItem value="grade_low">Lowest Grade</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
+      {loading ? (
+        <p className="text-center text-muted-foreground py-10">Loading applications...</p>
+      ) : filtered.length === 0 ? (
+        <p className="text-center text-muted-foreground py-10">No applications found.</p>
+      ) : (
+        <Card>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Job / Position</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead className="w-20"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((app) => (
+                  <TableRow key={app.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedApp(app); setDetailOpen(true); }}>
+                    <TableCell className="font-medium">{app.full_name}</TableCell>
+                    <TableCell>
+                      <Badge variant={app.application_type === "officiate" ? "default" : "secondary"}>
+                        {app.application_type === "officiate" ? "Official" : "Staff"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
+                      {getJobTypes(app)}
+                    </TableCell>
+                    <TableCell className="text-sm">{app.city}, {app.state}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((g) => (
+                          <button
+                            key={g}
+                            onClick={(e) => { e.stopPropagation(); updateGrade(app.id, g); }}
+                            className="p-0"
+                          >
+                            <Star className={`h-4 w-4 ${g <= (app.admin_grade || 0) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={app.status === "pending" ? "outline" : app.status === "approved" ? "default" : "secondary"}>
+                        {app.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {new Date(app.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setSelectedApp(app); setDetailOpen(true); }}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteApplication(app.id); }}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      )}
 
-          {/* Table */}
-          {loading ? (
-            <p className="text-center text-muted-foreground py-10">Loading applications...</p>
-          ) : filtered.length === 0 ? (
-            <p className="text-center text-muted-foreground py-10">No applications found.</p>
-          ) : (
-            <Card>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Job / Position</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="w-20"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((app) => (
-                      <TableRow key={app.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedApp(app); setDetailOpen(true); }}>
-                        <TableCell className="font-medium">{app.full_name}</TableCell>
-                        <TableCell>
-                          <Badge variant={app.application_type === "officiate" ? "default" : "secondary"}>
-                            {app.application_type === "officiate" ? "Official" : "Staff"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">
-                          {getJobTypes(app)}
-                        </TableCell>
-                        <TableCell className="text-sm">{app.city}, {app.state}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-0.5">
-                            {[1, 2, 3, 4, 5].map((g) => (
-                              <button
-                                key={g}
-                                onClick={(e) => { e.stopPropagation(); updateGrade(app.id, g); }}
-                                className="p-0"
-                              >
-                                <Star className={`h-4 w-4 ${g <= (app.admin_grade || 0) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground/30"}`} />
-                              </button>
-                            ))}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={app.status === "pending" ? "outline" : app.status === "approved" ? "default" : "secondary"}>
-                            {app.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {new Date(app.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setSelectedApp(app); setDetailOpen(true); }}>
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteApplication(app.id); }}>
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </Card>
-          )}
-        </div>
-      </section>
-
-      {/* Detail Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           {selectedApp && (
@@ -310,7 +294,6 @@ const StaffOps = () => {
                 <DialogTitle className="font-display">{selectedApp.full_name}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                {/* Status & Grade Controls */}
                 <div className="flex flex-wrap gap-3 items-center">
                   <Select value={selectedApp.status} onValueChange={(v) => updateStatus(selectedApp.id, v)}>
                     <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
@@ -330,7 +313,6 @@ const StaffOps = () => {
                   </div>
                 </div>
 
-                {/* Personal */}
                 <Card>
                   <CardHeader className="py-3"><CardTitle className="text-sm">Personal Information</CardTitle></CardHeader>
                   <CardContent className="grid grid-cols-2 gap-2 text-sm pb-4">
@@ -343,7 +325,6 @@ const StaffOps = () => {
                   </CardContent>
                 </Card>
 
-                {/* Credentials / Positions */}
                 <Card>
                   <CardHeader className="py-3">
                     <CardTitle className="text-sm">
@@ -377,7 +358,6 @@ const StaffOps = () => {
                   </CardContent>
                 </Card>
 
-                {/* Logistics */}
                 <Card>
                   <CardHeader className="py-3"><CardTitle className="text-sm">Logistics & Payment</CardTitle></CardHeader>
                   <CardContent className="grid grid-cols-2 gap-2 text-sm pb-4">
@@ -392,7 +372,6 @@ const StaffOps = () => {
                   </CardContent>
                 </Card>
 
-                {/* Admin Notes */}
                 <div>
                   <label className="text-sm font-medium text-foreground mb-1 block">Admin Notes</label>
                   <Textarea
@@ -407,8 +386,8 @@ const StaffOps = () => {
           )}
         </DialogContent>
       </Dialog>
-    </Layout>
+    </>
   );
 };
 
-export default StaffOps;
+export default StaffPanel;

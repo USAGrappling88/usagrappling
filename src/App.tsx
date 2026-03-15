@@ -15,9 +15,7 @@ import Membership from "./pages/Membership";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import PressRelease from "./pages/PressRelease";
 import News from "./pages/News";
-import PressOps from "./pages/admin/PressOps";
-import EventOps from "./pages/admin/EventOps";
-import StaffOps from "./pages/admin/StaffOps";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -44,9 +42,10 @@ const App = () => (
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<PressRelease />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/admin/press-ops" element={<PressOps />} />
-            <Route path="/admin/event-ops" element={<EventOps />} />
-            <Route path="/admin/staff-ops" element={<StaffOps />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/press-ops" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin/event-ops" element={<Navigate to="/admin" replace />} />
+            <Route path="/admin/staff-ops" element={<Navigate to="/admin" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
