@@ -17,6 +17,7 @@ import PressRelease from "./pages/PressRelease";
 import News from "./pages/News";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
