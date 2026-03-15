@@ -18,7 +18,7 @@ const authSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { user, isLoading, signIn, signUp } = useAuth();
+  const { user, isAdmin, isLoading, signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,9 +28,12 @@ const Auth = () => {
     if (user && !isLoading) {
       const params = new URLSearchParams(window.location.search);
       const redirectTo = params.get('redirect') || '/admin/press-ops';
+      const isAdminRoute = redirectTo.startsWith('/admin');
+
+      if (isAdminRoute && !isAdmin) return;
       navigate(redirectTo);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isAdmin, isLoading, navigate]);
 
   const validateForm = () => {
     const result = authSchema.safeParse({ email, password });
@@ -63,9 +66,6 @@ const Auth = () => {
       }
     } else {
       toast.success('Signed in successfully!');
-      const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get('redirect') || '/admin/press-ops';
-      navigate(redirectTo);
     }
   };
 

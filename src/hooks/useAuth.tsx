@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const previousUserIdRef = useRef<string | null>(null);
+  const checkedAdminUserIdRef = useRef<string | null>(null);
 
   const checkAdminRole = async (userId: string) => {
     const { data, error } = await supabase
@@ -36,32 +38,46 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const syncAuthState = async (currentSession: Session | null) => {
+      const nextUserId = currentSession?.user?.id ?? null;
+      const userChanged = previousUserIdRef.current !== nextUserId;
+
+      if (userChanged) {
+        setIsLoading(true);
+        checkedAdminUserIdRef.current = null;
+      }
+
+      previousUserIdRef.current = nextUserId;
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+
+      if (!currentSession?.user) {
+        setIsAdmin(false);
+        setIsLoading(false);
+        return;
+      }
+
+      if (checkedAdminUserIdRef.current === nextUserId) {
+        setIsLoading(false);
+        return;
+      }
+
+      const admin = await checkAdminRole(currentSession.user.id);
+      setIsAdmin(admin);
+      checkedAdminUserIdRef.current = nextUserId;
+      setIsLoading(false);
+    };
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Defer admin check with setTimeout to avoid deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id).then(setIsAdmin);
-          }, 0);
-        } else {
-          setIsAdmin(false);
-        }
-        setIsLoading(false);
+      (_event, currentSession) => {
+        void syncAuthState(currentSession);
       }
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkAdminRole(session.user.id).then(setIsAdmin);
-      }
-      setIsLoading(false);
+    void supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      void syncAuthState(currentSession);
     });
 
     return () => subscription.unsubscribe();
