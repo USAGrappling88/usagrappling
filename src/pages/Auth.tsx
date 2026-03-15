@@ -27,7 +27,7 @@ const Auth = () => {
   useEffect(() => {
     if (user && !isLoading) {
       const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get('redirect') || '/admin/press-ops';
+      const redirectTo = params.get('redirect') || '/admin';
       const isAdminRoute = redirectTo.startsWith('/admin');
 
       if (isAdminRoute && !isAdmin) return;
