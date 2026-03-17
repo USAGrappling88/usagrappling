@@ -103,13 +103,12 @@ export const EventPanel = () => {
     enabled: !!user && isAdmin,
   });
 
-  const today = toStartOfDay(new Date());
+  const todayCentral = getTodayCentralDateString();
 
   const filteredEvents = events?.filter((event) => {
-    const eventDate = toStartOfDay(parseDateOnly(event.event_date));
     if (activeTab === "archived") return event.is_archived;
-    if (activeTab === "past") return !event.is_archived && eventDate < today;
-    return !event.is_archived && eventDate >= today;
+    if (activeTab === "past") return !event.is_archived && event.event_date < todayCentral;
+    return !event.is_archived && event.event_date >= todayCentral;
   }) || [];
 
   const createMutation = useMutation({
