@@ -289,7 +289,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
-              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) >= today).length || 0}
+              {events?.filter(e => !e.is_archived && e.event_date >= todayCentral).length || 0}
             </div>
           </CardContent>
         </Card>
@@ -299,7 +299,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-accent">
-              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) < today).length || 0}
+              {events?.filter(e => !e.is_archived && e.event_date < todayCentral).length || 0}
             </div>
           </CardContent>
         </Card>
