@@ -50,6 +50,7 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { getStateAbbreviation, EVENT_STYLE_CONFIG } from "@/lib/stateAbbreviations";
+import { getTodayCentralDateString, parseDateOnly } from "@/lib/dateUtils";
 
 type EventStyle = "catch_wrestling" | "college" | "grappling" | "sport_jiu_jitsu" | "wrestling";
 
@@ -66,17 +67,6 @@ interface Event {
   created_at: string;
   updated_at: string;
 }
-
-const parseDateOnly = (dateString: string) => {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const toStartOfDay = (date: Date) => {
-  const normalized = new Date(date);
-  normalized.setHours(0, 0, 0, 0);
-  return normalized;
-};
 
 export const EventPanel = () => {
   const { user, isAdmin } = useAuth();
@@ -113,13 +103,12 @@ export const EventPanel = () => {
     enabled: !!user && isAdmin,
   });
 
-  const today = toStartOfDay(new Date());
+  const todayCentral = getTodayCentralDateString();
 
   const filteredEvents = events?.filter((event) => {
-    const eventDate = toStartOfDay(parseDateOnly(event.event_date));
     if (activeTab === "archived") return event.is_archived;
-    if (activeTab === "past") return !event.is_archived && eventDate < today;
-    return !event.is_archived && eventDate >= today;
+    if (activeTab === "past") return !event.is_archived && event.event_date < todayCentral;
+    return !event.is_archived && event.event_date >= todayCentral;
   }) || [];
 
   const createMutation = useMutation({
@@ -300,7 +289,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-primary">
-              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) >= today).length || 0}
+              {events?.filter(e => !e.is_archived && e.event_date >= todayCentral).length || 0}
             </div>
           </CardContent>
         </Card>
@@ -310,7 +299,7 @@ export const EventPanel = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-accent">
-              {events?.filter(e => !e.is_archived && toStartOfDay(parseDateOnly(e.event_date)) < today).length || 0}
+              {events?.filter(e => !e.is_archived && e.event_date < todayCentral).length || 0}
             </div>
           </CardContent>
         </Card>

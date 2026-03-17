@@ -3,9 +3,10 @@ import { ArrowRight, Calendar, MapPin, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, isPast, startOfDay } from "date-fns";
+import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EVENT_STYLE_CONFIG } from "@/lib/stateAbbreviations";
+import { getTodayCentralDateString, parseDateOnly } from "@/lib/dateUtils";
 
 interface Event {
   id: string;
@@ -23,7 +24,7 @@ export function EventsSection() {
   const { data: events, isLoading } = useQuery({
     queryKey: ["upcoming-events"],
     queryFn: async () => {
-      const today = format(new Date(), "yyyy-MM-dd");
+      const today = getTodayCentralDateString();
       const { data, error } = await supabase
         .from("events")
         .select("*")
@@ -40,7 +41,7 @@ export function EventsSection() {
   const { data: totalCount } = useQuery({
     queryKey: ["events-count"],
     queryFn: async () => {
-      const today = format(new Date(), "yyyy-MM-dd");
+      const today = getTodayCentralDateString();
       const { count, error } = await supabase
         .from("events")
         .select("*", { count: "exact", head: true })
@@ -108,7 +109,7 @@ export function EventsSection() {
                       <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
-                          {format(new Date(event.event_date), "MMMM d, yyyy")}
+                          {format(parseDateOnly(event.event_date), "MMMM d, yyyy")}
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3.5 w-3.5" />

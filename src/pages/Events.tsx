@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, MapPin, ExternalLink, ArrowRight, Filter, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, addMonths, isSameMonth } from "date-fns";
+import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EVENT_STYLE_CONFIG } from "@/lib/stateAbbreviations";
+import { getTodayCentralDateString, parseDateOnly } from "@/lib/dateUtils";
 import {
   Select,
   SelectContent,
@@ -61,21 +62,20 @@ const Events = () => {
     return true;
   }) || [];
 
-  // Split into upcoming and past
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
+  // Split into upcoming and past based on US Central date boundary
+  const todayCentral = getTodayCentralDateString();
+
   const upcomingEvents = filteredEvents.filter(
-    (e) => new Date(e.event_date) >= today && !e.is_archived
+    (e) => e.event_date >= todayCentral && !e.is_archived
   );
   const pastEvents = filteredEvents.filter(
-    (e) => new Date(e.event_date) < today || e.is_archived
+    (e) => e.event_date < todayCentral || e.is_archived
   );
 
   // Group by month for upcoming
   const groupedByMonth: Record<string, Event[]> = {};
   upcomingEvents.forEach((event) => {
-    const monthKey = format(new Date(event.event_date), "MMMM yyyy");
+    const monthKey = format(parseDateOnly(event.event_date), "MMMM yyyy");
     if (!groupedByMonth[monthKey]) {
       groupedByMonth[monthKey] = [];
     }
@@ -223,7 +223,7 @@ const Events = () => {
                                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3.5 w-3.5" />
-                                    {format(new Date(event.event_date), "EEEE, MMMM d, yyyy")}
+                                    {format(parseDateOnly(event.event_date), "EEEE, MMMM d, yyyy")}
                                   </span>
                                   <span className="flex items-center gap-1">
                                     <MapPin className="h-3.5 w-3.5" />
@@ -290,7 +290,7 @@ const Events = () => {
                                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3.5 w-3.5" />
-                                    {format(new Date(event.event_date), "MMMM d, yyyy")}
+                                    {format(parseDateOnly(event.event_date), "MMMM d, yyyy")}
                                   </span>
                                   <span className="flex items-center gap-1">
                                     <MapPin className="h-3.5 w-3.5" />
