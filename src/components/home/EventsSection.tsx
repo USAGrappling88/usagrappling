@@ -41,7 +41,7 @@ export function EventsSection() {
   const { data: totalCount } = useQuery({
     queryKey: ["events-count"],
     queryFn: async () => {
-      const today = format(new Date(), "yyyy-MM-dd");
+      const today = getTodayCentralDateString();
       const { count, error } = await supabase
         .from("events")
         .select("*", { count: "exact", head: true })
