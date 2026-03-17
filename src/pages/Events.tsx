@@ -62,21 +62,20 @@ const Events = () => {
     return true;
   }) || [];
 
-  // Split into upcoming and past
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
+  // Split into upcoming and past based on US Central date boundary
+  const todayCentral = getTodayCentralDateString();
+
   const upcomingEvents = filteredEvents.filter(
-    (e) => new Date(e.event_date) >= today && !e.is_archived
+    (e) => e.event_date >= todayCentral && !e.is_archived
   );
   const pastEvents = filteredEvents.filter(
-    (e) => new Date(e.event_date) < today || e.is_archived
+    (e) => e.event_date < todayCentral || e.is_archived
   );
 
   // Group by month for upcoming
   const groupedByMonth: Record<string, Event[]> = {};
   upcomingEvents.forEach((event) => {
-    const monthKey = format(new Date(event.event_date), "MMMM yyyy");
+    const monthKey = format(parseDateOnly(event.event_date), "MMMM yyyy");
     if (!groupedByMonth[monthKey]) {
       groupedByMonth[monthKey] = [];
     }
