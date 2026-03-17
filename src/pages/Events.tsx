@@ -223,7 +223,7 @@ const Events = () => {
                                 <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
                                   <span className="flex items-center gap-1">
                                     <Calendar className="h-3.5 w-3.5" />
-                                    {format(new Date(event.event_date), "EEEE, MMMM d, yyyy")}
+                                    {format(parseDateOnly(event.event_date), "EEEE, MMMM d, yyyy")}
                                   </span>
                                   <span className="flex items-center gap-1">
                                     <MapPin className="h-3.5 w-3.5" />
