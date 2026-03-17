@@ -24,7 +24,7 @@ export function EventsSection() {
   const { data: events, isLoading } = useQuery({
     queryKey: ["upcoming-events"],
     queryFn: async () => {
-      const today = format(new Date(), "yyyy-MM-dd");
+      const today = getTodayCentralDateString();
       const { data, error } = await supabase
         .from("events")
         .select("*")
