@@ -5,10 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Calendar, MapPin, ExternalLink, ArrowRight, Filter, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, addMonths, isSameMonth } from "date-fns";
+import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EVENT_STYLE_CONFIG } from "@/lib/stateAbbreviations";
+import { getTodayCentralDateString, parseDateOnly } from "@/lib/dateUtils";
 import {
   Select,
   SelectContent,

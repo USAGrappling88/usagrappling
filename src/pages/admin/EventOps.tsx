@@ -50,6 +50,7 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { getStateAbbreviation, EVENT_STYLE_CONFIG } from "@/lib/stateAbbreviations";
+import { getTodayCentralDateString, parseDateOnly } from "@/lib/dateUtils";
 
 type EventStyle = "catch_wrestling" | "college" | "grappling" | "sport_jiu_jitsu" | "wrestling";
 
@@ -66,17 +67,6 @@ interface Event {
   created_at: string;
   updated_at: string;
 }
-
-const parseDateOnly = (dateString: string) => {
-  const [year, month, day] = dateString.split("-").map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const toStartOfDay = (date: Date) => {
-  const normalized = new Date(date);
-  normalized.setHours(0, 0, 0, 0);
-  return normalized;
-};
 
 export const EventPanel = () => {
   const { user, isAdmin } = useAuth();
