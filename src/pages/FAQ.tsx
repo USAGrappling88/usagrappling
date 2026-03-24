@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 
 // FAQ data organized by category - user will provide actual content
 const faqCategories = [

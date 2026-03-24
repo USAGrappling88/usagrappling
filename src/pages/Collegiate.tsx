@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import ncgaBanner from "@/assets/ncga-banner.jpg";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 const NCGA_URL = "https://www.thencga.org";
 const NCGA_VIDEO_URL = "https://www.youtube.com/embed/YOUR_VIDEO_ID";
 

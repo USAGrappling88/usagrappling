@@ -14,7 +14,7 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);

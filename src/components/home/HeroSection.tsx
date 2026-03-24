@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import heroBanner from "@/assets/hero-banner.png";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 const ZEFFY_URL = "https://www.zeffy.com/en-US/donation-form/support-team-usa";
 
 export function HeroSection() {
