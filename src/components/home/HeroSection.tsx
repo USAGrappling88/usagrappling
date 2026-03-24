@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import heroBanner from "@/assets/hero-banner.png";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 const ZEFFY_URL = "https://www.zeffy.com/en-US/donation-form/support-team-usa";
 
 export function HeroSection() {
@@ -36,7 +36,7 @@ export function HeroSection() {
               size="lg" 
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-lg px-8 py-6"
             >
-              <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+              <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                 Join USA Grappling
               </a>
             </Button>

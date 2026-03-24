@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Target, Users, Globe, Award } from "lucide-react";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 
 const values = [
   {
@@ -143,7 +143,7 @@ const About = () => {
             size="lg" 
             className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
           >
-            <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+            <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
               Become a Member
             </a>
           </Button>

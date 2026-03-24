@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const SMOOTHCOMP_URL = "https://usag.smoothcomp.com/en/federation/362/membership";
+const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 
 const memberships = [
   {
@@ -114,7 +114,7 @@ export function MembershipSection() {
                   asChild 
                   className="w-full bg-primary hover:bg-primary/90 mt-auto"
                 >
-                  <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+                  <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                     Get Started
                   </a>
                 </Button>
