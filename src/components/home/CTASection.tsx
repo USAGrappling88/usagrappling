@@ -20,7 +20,7 @@ export function CTASection() {
               size="lg" 
               className="bg-white text-primary hover:bg-white/90 font-semibold text-lg px-8"
             >
-              <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+              <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                 Join Now
               </a>
             </Button>

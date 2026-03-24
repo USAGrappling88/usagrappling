@@ -106,7 +106,7 @@ const Collegiate = () => {
                 variant="outline"
                 className="border-white text-white hover:bg-white hover:text-primary"
               >
-                <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+                <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                   Join USA Grappling
                 </a>
               </Button>

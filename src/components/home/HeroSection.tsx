@@ -36,7 +36,7 @@ export function HeroSection() {
               size="lg" 
               className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold text-lg px-8 py-6"
             >
-              <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+              <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                 Join USA Grappling
               </a>
             </Button>

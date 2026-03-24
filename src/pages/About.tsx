@@ -143,7 +143,7 @@ const About = () => {
             size="lg" 
             className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
           >
-            <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+            <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
               Become a Member
             </a>
           </Button>

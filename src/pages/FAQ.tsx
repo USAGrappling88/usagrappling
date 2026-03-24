@@ -176,7 +176,7 @@ const FAQ = () => {
                 variant="outline" 
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
               >
-                <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+                <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                   Visit Smoothcomp
                 </a>
               </Button>

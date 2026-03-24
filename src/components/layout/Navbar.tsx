@@ -66,7 +66,7 @@ export function Navbar() {
           {/* CTA Button */}
           <div className="hidden lg:block">
             <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
-              <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+              <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                 Join Now
               </a>
             </Button>
@@ -115,7 +115,7 @@ export function Navbar() {
                 )
               ))}
               <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold mt-2">
-                <a href={SMOOTHCOMP_URL} target="_blank" rel="noopener noreferrer">
+                <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
                   Join Now
                 </a>
               </Button>
