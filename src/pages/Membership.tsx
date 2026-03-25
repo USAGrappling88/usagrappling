@@ -53,6 +53,7 @@ const membershipTypes = [
     ],
     cta: "Charter Your Academy",
     popular: false,
+    url: MEMBERSHIP_URL,
   },
   {
     title: "Event Sanction",
