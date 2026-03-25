@@ -120,7 +120,7 @@ export function MembershipSection() {
                   asChild 
                   className="w-full bg-primary hover:bg-primary/90 mt-auto"
                 >
-                  <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
+                  <a href={membership.url} target="_blank" rel="noopener noreferrer">
                     Get Started
                   </a>
                 </Button>
