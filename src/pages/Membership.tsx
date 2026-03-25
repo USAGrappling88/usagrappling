@@ -69,6 +69,7 @@ const membershipTypes = [
     ],
     cta: "Sanction Your Event",
     popular: false,
+    url: MEMBERSHIP_URL,
   },
 ];
 
