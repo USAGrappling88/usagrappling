@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ExternalLink } from "lucide-react";
 
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
+const YOUTH_ADULT_URL = "https://usag.uventex.com/events/event/337467";
 
 const membershipTypes = [
   {
@@ -20,6 +21,7 @@ const membershipTypes = [
     ],
     cta: "Join as Athlete",
     popular: true,
+    url: YOUTH_ADULT_URL,
   },
   {
     title: "Grappling Leader",
