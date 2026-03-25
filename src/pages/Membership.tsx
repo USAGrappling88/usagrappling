@@ -5,6 +5,7 @@ import { Check, ExternalLink } from "lucide-react";
 
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 const YOUTH_ADULT_URL = "https://usag.uventex.com/events/event/337467";
+const GRAPPLING_LEADER_URL = "https://usag.uventex.com/events/event/337468";
 
 const membershipTypes = [
   {
@@ -37,7 +38,7 @@ const membershipTypes = [
     ],
     cta: "Join as Leader",
     popular: false,
-    url: MEMBERSHIP_URL,
+    url: GRAPPLING_LEADER_URL,
   },
   {
     title: "Academy Charter",
