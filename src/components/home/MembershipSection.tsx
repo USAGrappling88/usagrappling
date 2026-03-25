@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
+const YOUTH_ADULT_URL = "https://usag.uventex.com/events/event/337467";
 
 const memberships = [
   {
@@ -17,6 +18,7 @@ const memberships = [
       "Member discounts",
     ],
     popular: false,
+    url: YOUTH_ADULT_URL,
   },
   {
     title: "Adult Membership",
@@ -30,6 +32,7 @@ const memberships = [
       "Member discounts",
     ],
     popular: true,
+    url: YOUTH_ADULT_URL,
   },
   {
     title: "Grappling Leader",
@@ -43,6 +46,7 @@ const memberships = [
       "Liability coverage",
     ],
     popular: false,
+    url: MEMBERSHIP_URL,
   },
   {
     title: "Academy Charter",
@@ -56,6 +60,7 @@ const memberships = [
       "Promotional materials",
     ],
     popular: false,
+    url: MEMBERSHIP_URL,
   },
   {
     title: "Event Sanction",
@@ -69,6 +74,7 @@ const memberships = [
       "USAG promotion",
     ],
     popular: false,
+    url: MEMBERSHIP_URL,
   },
 ];
 
