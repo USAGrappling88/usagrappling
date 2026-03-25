@@ -37,6 +37,7 @@ const membershipTypes = [
     ],
     cta: "Join as Leader",
     popular: false,
+    url: MEMBERSHIP_URL,
   },
   {
     title: "Academy Charter",
