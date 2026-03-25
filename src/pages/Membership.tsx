@@ -126,7 +126,7 @@ const Membership = () => {
                     asChild 
                     className={`w-full ${type.popular ? 'bg-accent hover:bg-accent/90 text-accent-foreground' : 'bg-primary hover:bg-primary/90'}`}
                   >
-                    <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
+                    <a href={type.url} target="_blank" rel="noopener noreferrer">
                       {type.cta}
                       <ExternalLink className="w-4 h-4 ml-2" />
                     </a>
