@@ -62,7 +62,7 @@ const memberships = [
       "Promotional materials",
     ],
     popular: false,
-    url: MEMBERSHIP_URL,
+    url: ACADEMY_CHARTER_URL,
   },
   {
     title: "Event Sanction",
