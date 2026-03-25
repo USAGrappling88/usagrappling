@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, ExternalLink } from "lucide-react";
 
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
+const YOUTH_ADULT_URL = "https://usag.uventex.com/events/event/337467";
 
 const membershipTypes = [
   {
@@ -20,6 +21,7 @@ const membershipTypes = [
     ],
     cta: "Join as Athlete",
     popular: true,
+    url: YOUTH_ADULT_URL,
   },
   {
     title: "Grappling Leader",
@@ -35,6 +37,7 @@ const membershipTypes = [
     ],
     cta: "Join as Leader",
     popular: false,
+    url: MEMBERSHIP_URL,
   },
   {
     title: "Academy Charter",
@@ -50,6 +53,7 @@ const membershipTypes = [
     ],
     cta: "Charter Your Academy",
     popular: false,
+    url: MEMBERSHIP_URL,
   },
   {
     title: "Event Sanction",
@@ -65,6 +69,7 @@ const membershipTypes = [
     ],
     cta: "Sanction Your Event",
     popular: false,
+    url: MEMBERSHIP_URL,
   },
 ];
 
@@ -121,7 +126,7 @@ const Membership = () => {
                     asChild 
                     className={`w-full ${type.popular ? 'bg-accent hover:bg-accent/90 text-accent-foreground' : 'bg-primary hover:bg-primary/90'}`}
                   >
-                    <a href={MEMBERSHIP_URL} target="_blank" rel="noopener noreferrer">
+                    <a href={type.url} target="_blank" rel="noopener noreferrer">
                       {type.cta}
                       <ExternalLink className="w-4 h-4 ml-2" />
                     </a>
