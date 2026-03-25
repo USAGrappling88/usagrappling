@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 const YOUTH_ADULT_URL = "https://usag.uventex.com/events/event/337467";
 const GRAPPLING_LEADER_URL = "https://usag.uventex.com/events/event/337468";
+const ACADEMY_CHARTER_URL = "https://usag.uventex.com/events/event/337469";
 
 const memberships = [
   {
@@ -61,7 +62,7 @@ const memberships = [
       "Promotional materials",
     ],
     popular: false,
-    url: MEMBERSHIP_URL,
+    url: ACADEMY_CHARTER_URL,
   },
   {
     title: "Event Sanction",
