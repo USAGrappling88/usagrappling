@@ -47,7 +47,7 @@ const memberships = [
       "Liability coverage",
     ],
     popular: false,
-    url: MEMBERSHIP_URL,
+    url: GRAPPLING_LEADER_URL,
   },
   {
     title: "Academy Charter",
