@@ -18,6 +18,7 @@ import News from "./pages/News";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import WorldTeamPetition from "./pages/WorldTeamPetition";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
