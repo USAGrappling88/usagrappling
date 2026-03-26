@@ -158,7 +158,7 @@ const WorldTeamPetition = () => {
             <div className="flex justify-center mb-3">
               <Trophy className="w-10 h-10 text-primary" />
             </div>
-            <CardTitle className="text-3xl font-display">Team USA Grappling World Team Petition</CardTitle>
+            <CardTitle className="text-3xl font-display">Team USA World Team Petition</CardTitle>
             <CardDescription>Complete this form to petition for a spot on the Team USA Grappling World Team.</CardDescription>
           </CardHeader>
           <CardContent>
