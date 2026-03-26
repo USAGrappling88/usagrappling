@@ -4,11 +4,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
 import { UserManagementPanel } from "./UserManagement";
+import { WorldTeamPanel } from "./WorldTeamOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -69,12 +70,16 @@ const AdminDashboard = () => {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <UserCog className="w-4 h-4" /> Users
             </TabsTrigger>
+            <TabsTrigger value="world-team" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" /> World Team
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
           <TabsContent value="users"><UserManagementPanel /></TabsContent>
+          <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>

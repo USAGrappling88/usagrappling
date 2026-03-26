@@ -296,6 +296,84 @@ export type Database = {
         }
         Relationships: []
       }
+      world_team_petitions: {
+        Row: {
+          admin_notes: string | null
+          admin_rating: number | null
+          belt_ranking: string | null
+          competition_type: string
+          competition_weight_kg: number
+          created_at: string
+          dob: string
+          email: string
+          first_name: string
+          hoodie_size: string | null
+          id: string
+          last_name: string
+          membership_number: string | null
+          notable_accomplishments: string | null
+          pants_size: string | null
+          rashguard_size: string | null
+          self_fund: boolean
+          sex: string
+          shirt_size: string | null
+          short_size: string | null
+          status: string
+          style: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          admin_rating?: number | null
+          belt_ranking?: string | null
+          competition_type: string
+          competition_weight_kg: number
+          created_at?: string
+          dob: string
+          email: string
+          first_name: string
+          hoodie_size?: string | null
+          id?: string
+          last_name: string
+          membership_number?: string | null
+          notable_accomplishments?: string | null
+          pants_size?: string | null
+          rashguard_size?: string | null
+          self_fund?: boolean
+          sex: string
+          shirt_size?: string | null
+          short_size?: string | null
+          status?: string
+          style: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          admin_rating?: number | null
+          belt_ranking?: string | null
+          competition_type?: string
+          competition_weight_kg?: number
+          created_at?: string
+          dob?: string
+          email?: string
+          first_name?: string
+          hoodie_size?: string | null
+          id?: string
+          last_name?: string
+          membership_number?: string | null
+          notable_accomplishments?: string | null
+          pants_size?: string | null
+          rashguard_size?: string | null
+          self_fund?: boolean
+          sex?: string
+          shirt_size?: string | null
+          short_size?: string | null
+          status?: string
+          style?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
