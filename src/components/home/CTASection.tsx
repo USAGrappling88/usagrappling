@@ -34,6 +34,16 @@ export function CTASection() {
                 Contact Us
               </a>
             </Button>
+            <Button 
+              asChild 
+              size="lg" 
+              variant="outline"
+              className="border-2 border-white text-white hover:bg-white hover:text-primary font-semibold text-lg px-8 bg-transparent"
+            >
+              <a href="/world-team-petition">
+                World Team Petition
+              </a>
+            </Button>
           </div>
         </div>
       </div>
