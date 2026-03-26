@@ -1,23 +1,30 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, Trophy, CheckCircle } from "lucide-react";
 
-const SIZES = ["XS", "S", "M", "L", "XL", "2XL"];
+const ADULT_SIZES = ["XS", "S", "M", "L", "XL", "2XL"];
 const YOUTH_SIZES = ["Youth XS", "Youth S", "Youth M", "Youth L", "Youth XL", "Youth 2XL"];
-const ALL_RASHGUARD_SIZES = [...YOUTH_SIZES, ...SIZES];
+
+const YOUTH_BELTS = ["White", "Grey", "Yellow", "Orange", "Green"];
+const ADULT_BELTS = ["White", "Blue", "Purple", "Brown", "Black"];
+
+const LBS_TO_KG = 0.453592;
 
 const WorldTeamPetition = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [ageCategory, setAgeCategory] = useState<"youth" | "adult" | "">("");
+  const [weightLbs, setWeightLbs] = useState("");
+  const [styles, setStyles] = useState<string[]>([]);
   const [form, setForm] = useState({
     email: "",
     membership_number: "",
@@ -25,11 +32,9 @@ const WorldTeamPetition = () => {
     last_name: "",
     dob: "",
     sex: "",
-    competition_weight_kg: "",
     belt_ranking: "",
     notable_accomplishments: "",
     self_fund: false,
-    style: "",
     competition_type: "",
     rashguard_size: "",
     short_size: "",
@@ -38,17 +43,44 @@ const WorldTeamPetition = () => {
     pants_size: "",
   });
 
+  const weightKg = useMemo(() => {
+    const lbs = parseFloat(weightLbs);
+    if (isNaN(lbs) || lbs <= 0) return "";
+    return (lbs * LBS_TO_KG).toFixed(1);
+  }, [weightLbs]);
+
   const update = (field: string, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const toggleStyle = (style: string) => {
+    setStyles((prev) =>
+      prev.includes(style) ? prev.filter((s) => s !== style) : [...prev, style]
+    );
+  };
+
+  const beltOptions = ageCategory === "youth" ? YOUTH_BELTS : ageCategory === "adult" ? ADULT_BELTS : [];
+
+  const getSizeOptions = (field: string) => {
+    if (ageCategory === "youth") {
+      // Youth gets youth sizes + adult sizes
+      return { primary: YOUTH_SIZES, secondary: ADULT_SIZES, secondaryLabel: "Adult Sizes" };
+    }
+    // Adult or rashguard (always shows both for rashguard)
+    if (field === "rashguard_size") {
+      return { primary: ADULT_SIZES, secondary: YOUTH_SIZES, secondaryLabel: "Youth Sizes" };
+    }
+    return { primary: ADULT_SIZES, secondary: null, secondaryLabel: null };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.email || !form.first_name || !form.last_name || !form.dob || !form.sex || !form.competition_weight_kg || !form.style || !form.competition_type) {
+    if (!form.email || !form.first_name || !form.last_name || !form.dob || !form.sex || !weightLbs || styles.length === 0 || !form.competition_type || !ageCategory) {
       toast.error("Please fill in all required fields.");
       return;
     }
     setLoading(true);
+    const styleValue = styles.join(", ");
     const { error } = await (supabase.from("world_team_petitions" as any).insert({
       email: form.email,
       membership_number: form.membership_number || null,
@@ -56,11 +88,11 @@ const WorldTeamPetition = () => {
       last_name: form.last_name,
       dob: form.dob,
       sex: form.sex,
-      competition_weight_kg: parseFloat(form.competition_weight_kg),
+      competition_weight_kg: parseFloat(weightKg),
       belt_ranking: form.belt_ranking || null,
       notable_accomplishments: form.notable_accomplishments || null,
       self_fund: form.self_fund,
-      style: form.style,
+      style: styleValue,
       competition_type: form.competition_type,
       rashguard_size: form.rashguard_size || null,
       short_size: form.short_size || null,
@@ -90,6 +122,34 @@ const WorldTeamPetition = () => {
     );
   }
 
+  const renderSizeSelect = (label: string, field: string) => {
+    const { primary, secondary, secondaryLabel } = getSizeOptions(field);
+    return (
+      <div className="space-y-2">
+        <Label>{label}</Label>
+        <Select value={(form as any)[field]} onValueChange={(v) => update(field, v)}>
+          <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>{ageCategory === "youth" ? "Youth Sizes" : "Adult Sizes"}</SelectLabel>
+              {primary.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectGroup>
+            {secondary && (
+              <SelectGroup>
+                <SelectLabel>{secondaryLabel}</SelectLabel>
+                {secondary.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectGroup>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-12 max-w-2xl">
@@ -103,31 +163,69 @@ const WorldTeamPetition = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Age Category */}
+              <div className="space-y-4 p-4 rounded-lg border border-border bg-muted/30">
+                <h3 className="font-semibold text-foreground">Petitioner Category *</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    type="button"
+                    variant={ageCategory === "youth" ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => {
+                      setAgeCategory("youth");
+                      update("belt_ranking", "");
+                    }}
+                  >
+                    Youth
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={ageCategory === "adult" ? "default" : "outline"}
+                    className="w-full"
+                    onClick={() => {
+                      setAgeCategory("adult");
+                      update("belt_ranking", "");
+                    }}
+                  >
+                    Adult
+                  </Button>
+                </div>
+              </div>
+
               {/* Style & Competition */}
               <div className="space-y-4 p-4 rounded-lg border border-border bg-muted/30">
                 <h3 className="font-semibold text-foreground">Competition Selection</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Style *</Label>
-                    <Select value={form.style} onValueChange={(v) => update("style", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select style" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="UWW Grappling">UWW Grappling</SelectItem>
-                        <SelectItem value="Sport Jiu-Jitsu">Sport Jiu-Jitsu</SelectItem>
-                      </SelectContent>
-                    </Select>
+                <div className="space-y-3">
+                  <Label>Style(s) * <span className="text-muted-foreground text-xs">(select one or both)</span></Label>
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant={styles.includes("UWW Grappling") ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => toggleStyle("UWW Grappling")}
+                    >
+                      UWW Grappling
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={styles.includes("Sport Jiu-Jitsu") ? "default" : "outline"}
+                      className="flex-1"
+                      onClick={() => toggleStyle("Sport Jiu-Jitsu")}
+                    >
+                      Sport Jiu-Jitsu
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Competition Type *</Label>
-                    <Select value={form.competition_type} onValueChange={(v) => update("competition_type", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Gi">Gi</SelectItem>
-                        <SelectItem value="Nogi">Nogi</SelectItem>
-                        <SelectItem value="Both">Both</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Competition Type *</Label>
+                  <Select value={form.competition_type} onValueChange={(v) => update("competition_type", v)}>
+                    <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Gi">Gi</SelectItem>
+                      <SelectItem value="Nogi">Nogi</SelectItem>
+                      <SelectItem value="Both">Both</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="flex items-center space-x-2 pt-2">
                   <Checkbox
@@ -178,13 +276,43 @@ const WorldTeamPetition = () => {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Competition Weight (kg) *</Label>
-                    <Input type="number" step="0.1" value={form.competition_weight_kg} onChange={(e) => update("competition_weight_kg", e.target.value)} required />
+                    <Label>Competition Weight *</Label>
+                    <div className="space-y-1">
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          placeholder="Enter lbs"
+                          value={weightLbs}
+                          onChange={(e) => setWeightLbs(e.target.value)}
+                          required
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">lbs</span>
+                      </div>
+                      {weightKg && (
+                        <p className="text-xs text-muted-foreground">= {weightKg} kg</p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Belt Ranking (if applicable)</Label>
-                  <Input value={form.belt_ranking} onChange={(e) => update("belt_ranking", e.target.value)} placeholder="e.g. Purple Belt" />
+                  <Label>Belt Ranking {ageCategory ? "" : "(select category first)"}</Label>
+                  <Select
+                    value={form.belt_ranking}
+                    onValueChange={(v) => update("belt_ranking", v)}
+                    disabled={!ageCategory}
+                  >
+                    <SelectTrigger><SelectValue placeholder={ageCategory ? "Select belt" : "Select category first"} /></SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>{ageCategory === "youth" ? "Youth Belts" : "Adult Belts"}</SelectLabel>
+                        {beltOptions.map((belt) => (
+                          <SelectItem key={belt} value={belt}>{belt}</SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Brief Summary of Notable Wins and Accomplishments</Label>
@@ -194,64 +322,22 @@ const WorldTeamPetition = () => {
 
               {/* Sizing */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-foreground">Sizing Information</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Rashguard Size (Youth & Adult XS–2XL)</Label>
-                    <Select value={form.rashguard_size} onValueChange={(v) => update("rashguard_size", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
-                      <SelectContent>
-                        {ALL_RASHGUARD_SIZES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <h3 className="font-semibold text-foreground">
+                  Sizing Information
+                  {ageCategory && <span className="text-sm font-normal text-muted-foreground ml-2">({ageCategory === "youth" ? "Youth" : "Adult"} petitioner)</span>}
+                </h3>
+                {!ageCategory && (
+                  <p className="text-sm text-muted-foreground">Please select Youth or Adult at the top to see sizing options.</p>
+                )}
+                {ageCategory && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {renderSizeSelect("Rashguard Size", "rashguard_size")}
+                    {renderSizeSelect("Short Size", "short_size")}
+                    {renderSizeSelect("Shirt Size", "shirt_size")}
+                    {renderSizeSelect("Hoodie Size", "hoodie_size")}
+                    {renderSizeSelect("Pants Size", "pants_size")}
                   </div>
-                  <div className="space-y-2">
-                    <Label>Short Size</Label>
-                    <Select value={form.short_size} onValueChange={(v) => update("short_size", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
-                      <SelectContent>
-                        {SIZES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Shirt Size</Label>
-                    <Select value={form.shirt_size} onValueChange={(v) => update("shirt_size", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
-                      <SelectContent>
-                        {SIZES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Hoodie Size</Label>
-                    <Select value={form.hoodie_size} onValueChange={(v) => update("hoodie_size", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
-                      <SelectContent>
-                        {SIZES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Pants Size</Label>
-                    <Select value={form.pants_size} onValueChange={(v) => update("pants_size", v)}>
-                      <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
-                      <SelectContent>
-                        {SIZES.map((s) => (
-                          <SelectItem key={s} value={s}>{s}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                )}
               </div>
 
               <Button type="submit" className="w-full" size="lg" disabled={loading}>
