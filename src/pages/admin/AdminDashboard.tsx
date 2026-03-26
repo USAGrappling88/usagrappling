@@ -70,12 +70,16 @@ const AdminDashboard = () => {
             <TabsTrigger value="users" className="flex items-center gap-2">
               <UserCog className="w-4 h-4" /> Users
             </TabsTrigger>
+            <TabsTrigger value="world-team" className="flex items-center gap-2">
+              <Trophy className="w-4 h-4" /> World Team
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
           <TabsContent value="users"><UserManagementPanel /></TabsContent>
+          <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
