@@ -44,7 +44,7 @@ const memberships = [
     features: [
       "Coaching certification",
       "Official training resources",
-      "Background check included",
+      "Background check & abuse prevention training required",
       "Liability coverage",
     ],
     popular: false,
