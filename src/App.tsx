@@ -19,6 +19,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import WorldTeamPetition from "./pages/WorldTeamPetition";
+import TeamUSA from "./pages/TeamUSA";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/world-team-petition" element={<WorldTeamPetition />} />
+            <Route path="/team-usa" element={<TeamUSA />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/press-ops" element={<Navigate to="/admin" replace />} />
             <Route path="/admin/event-ops" element={<Navigate to="/admin" replace />} />
