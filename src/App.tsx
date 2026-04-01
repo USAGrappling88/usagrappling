@@ -19,6 +19,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import WorldTeamPetition from "./pages/WorldTeamPetition";
+import TeamUSA from "./pages/TeamUSA";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
