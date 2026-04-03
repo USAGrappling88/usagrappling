@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Trophy, Users, Shield, Globe, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Trophy, Users, Shield, Globe, ChevronRight, Dices, DollarSign, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const TeamUSA = () => {
@@ -37,7 +37,7 @@ const TeamUSA = () => {
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4 max-w-5xl">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Team Structure</h2>
-          <p className="text-center text-muted-foreground mb-12">USA Grappling currently selects two World Teams</p>
+          <p className="text-center text-muted-foreground mb-12">USA Grappling currently selects World Teams across Youth and Senior divisions</p>
 
           <div className="grid md:grid-cols-2 gap-8">
             <Card className="border-2 border-blue-600/30 bg-gradient-to-b from-blue-50/50 to-background dark:from-blue-950/20">
@@ -70,6 +70,27 @@ const TeamUSA = () => {
                   <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-red-600" /> September 3–6, 2026</div>
                   <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-red-600" /> Japan</div>
                   <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-red-600" /> Ruleset: Gi (SJJIF format)</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-2 border-yellow-600/30 bg-gradient-to-b from-yellow-50/50 to-background dark:from-yellow-950/20 md:col-span-2">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center">
+                    <Award className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Senior National Team — Grand Prize Invitational (SJJIF)</h3>
+                    <Badge className="mt-1 bg-green-600 text-white border-none text-xs">Fully Funded</Badge>
+                  </div>
+                </div>
+                <p className="text-muted-foreground mb-4">International Grand Prize Invitational — Compete for $20,000+ in team prize money</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-yellow-600" /> 2026 (Date TBA — Japan)</div>
+                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-yellow-600" /> Japan</div>
+                  <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-yellow-600" /> Ruleset: SJJIF (Sport Jiu Jitsu International Federation)</div>
+                  <div className="flex items-center gap-2"><Dices className="h-4 w-4 text-yellow-600" /> Dice-Roll Format: Gi & No-Gi</div>
                 </div>
               </CardContent>
             </Card>
@@ -149,6 +170,98 @@ const TeamUSA = () => {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Senior Selection - Japan */}
+          <div className="mt-16">
+            <h3 className="text-2xl font-bold mb-2 flex items-center gap-2">
+              <Award className="h-6 w-6 text-yellow-600" /> 2026 Team USA Senior Selection (Japan)
+            </h3>
+            <p className="text-muted-foreground mb-6">International Grand Prize Invitational — SJJIF — Fully Funded</p>
+
+            {/* Eligibility */}
+            <Card className="mb-6">
+              <CardContent className="p-8">
+                <h4 className="font-bold text-lg mb-4">I. Athlete Eligibility & Mandatory Requirements</h4>
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p><strong>Rank:</strong> Applicants must hold a verified Black Belt in Brazilian Jiu-Jitsu.</p>
+                  <p><strong>Versatility:</strong> Must be proficient in both Gi and No-Gi (Dice-roll format).</p>
+                  <p><strong>Documentation:</strong> Must possess a valid U.S. Passport (valid 6 months past Oct 2026).</p>
+                  <p><strong>Licensing:</strong> Must be eligible for SJJIF/ASJJF individual athlete membership.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Competition Format */}
+            <Card className="mb-6">
+              <CardContent className="p-8">
+                <h4 className="font-bold text-lg mb-4">II. Competition Format & Weight Divisions</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  This tournament features a unique Team Points structure. Athletes will compete individually, but their wins contribute to a cumulative team score to determine the winner of the $20,000+ Grand Prize.
+                </p>
+                <div className="bg-muted/50 rounded-lg p-4 mb-6">
+                  <h5 className="font-semibold mb-2 flex items-center gap-2">
+                    <Dices className="h-4 w-4" /> The "Dice Roll" Rule
+                  </h5>
+                  <p className="text-sm text-muted-foreground mb-2">Immediately prior to each match, a dice roll will determine the uniform:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                    <li>• <strong>Even:</strong> Gi Match</li>
+                    <li>• <strong>Odd:</strong> No-Gi Match</li>
+                  </ul>
+                </div>
+                <h5 className="font-semibold mb-3">Weight Divisions</h5>
+                <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                  <div className="p-3 bg-muted/50 rounded-lg"><strong>Men's Lightweight:</strong> Under 76kg</div>
+                  <div className="p-3 bg-muted/50 rounded-lg"><strong>Men's Heavyweight:</strong> Over 76kg</div>
+                  <div className="p-3 bg-muted/50 rounded-lg"><strong>Women's Lightweight:</strong> Under 64kg</div>
+                  <div className="p-3 bg-muted/50 rounded-lg"><strong>Women's Heavyweight:</strong> Over 64kg</div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Funding */}
+            <Card className="mb-6 border-2 border-green-600/30">
+              <CardContent className="p-8">
+                <h4 className="font-bold text-lg mb-4">III. USA Grappling Funding & Coverage</h4>
+                <p className="text-sm text-muted-foreground mb-4">Selected athletes will receive a Full Sponsorship Package. USA Grappling will cover all overhead costs associated with the Japan tour:</p>
+                <div className="grid sm:grid-cols-2 gap-3 text-sm">
+                  {[
+                    { label: "Team Entry Fee", detail: "$2,500 (Covered by USA Grappling)" },
+                    { label: "Individual Costs", detail: "All registration and international licensing fees" },
+                    { label: "Logistics", detail: "Round-trip international airfare stipend, hotel accommodations, and daily food stipend" },
+                    { label: "Uniforms", detail: "Custom Team USA Gi and No-Gi competition kits" },
+                  ].map((item, i) => (
+                    <div key={i} className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                      <p className="font-semibold">{item.label}</p>
+                      <p className="text-muted-foreground">{item.detail}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Grand Prize */}
+            <Card className="border-2 border-yellow-600/30 bg-gradient-to-b from-yellow-50/50 to-background dark:from-yellow-950/20">
+              <CardContent className="p-8 text-center">
+                <h4 className="font-bold text-lg mb-2">IV. The Grand Prize</h4>
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <DollarSign className="h-8 w-8 text-yellow-600" />
+                  <span className="text-3xl font-extrabold">$20,000+</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-2">
+                  The National Team that wins the overall tournament will receive a cash prize of $20,000+.
+                </p>
+                <p className="text-sm font-semibold">
+                  100% of the Grand Prize winnings will be split equally among the four competing athletes.
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="mt-8 text-center">
+              <Button asChild size="lg" className="bg-red-600 hover:bg-red-700 text-white font-bold">
+                <Link to="/world-team-petition">Submit Senior Petition <ChevronRight className="ml-1 h-5 w-5" /></Link>
+              </Button>
+            </div>
           </div>
         </div>
       </section>
