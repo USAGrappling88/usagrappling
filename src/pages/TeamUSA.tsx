@@ -37,7 +37,7 @@ const TeamUSA = () => {
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto px-4 max-w-5xl">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Team Structure</h2>
-          <p className="text-center text-muted-foreground mb-12">USA Grappling currently selects two World Teams</p>
+          <p className="text-center text-muted-foreground mb-12">USA Grappling currently selects World Teams across Youth and Senior divisions</p>
 
           <div className="grid md:grid-cols-2 gap-8">
             <Card className="border-2 border-blue-600/30 bg-gradient-to-b from-blue-50/50 to-background dark:from-blue-950/20">
