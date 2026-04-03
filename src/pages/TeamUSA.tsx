@@ -87,7 +87,7 @@ const TeamUSA = () => {
                 </div>
                 <p className="text-muted-foreground mb-4">International Grand Prize Invitational — Compete for $20,000+ in team prize money</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-yellow-600" /> 2026 (Date TBA — Japan)</div>
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-yellow-600" /> September 3, 2026 — Japan</div>
                   <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-yellow-600" /> Japan</div>
                   <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-yellow-600" /> Ruleset: SJJIF (Sport Jiu Jitsu International Federation)</div>
                   <div className="flex items-center gap-2"><Dices className="h-4 w-4 text-yellow-600" /> Dice-Roll Format: Gi & No-Gi</div>
