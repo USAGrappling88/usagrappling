@@ -73,6 +73,27 @@ const TeamUSA = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="border-2 border-yellow-600/30 bg-gradient-to-b from-yellow-50/50 to-background dark:from-yellow-950/20 md:col-span-2">
+              <CardContent className="p-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-yellow-600 flex items-center justify-center">
+                    <Award className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Senior National Team — Grand Prize Invitational (SJJIF)</h3>
+                    <Badge className="mt-1 bg-green-600 text-white border-none text-xs">Fully Funded</Badge>
+                  </div>
+                </div>
+                <p className="text-muted-foreground mb-4">International Grand Prize Invitational — Compete for $20,000+ in team prize money</p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-yellow-600" /> 2026 (Date TBA — Japan)</div>
+                  <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-yellow-600" /> Japan</div>
+                  <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-yellow-600" /> Ruleset: SJJIF (Sport Jiu Jitsu International Federation)</div>
+                  <div className="flex items-center gap-2"><Dices className="h-4 w-4 text-yellow-600" /> Dice-Roll Format: Gi & No-Gi</div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
