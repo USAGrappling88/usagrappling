@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, Trophy, Users, Shield, Globe, ChevronRight } from "lucide-react";
+import { Calendar, MapPin, Trophy, Users, Shield, Globe, ChevronRight, Dices, DollarSign, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const TeamUSA = () => {
