@@ -107,6 +107,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: redirectUrl,
       },
     });
+
+    if (!error) {
+      // Notify super admins about the new signup
+      supabase.functions.invoke('notify-admin-signup', {
+        body: { email },
+      }).catch(console.error);
+    }
+
     return { error: error as Error | null };
   };
 
