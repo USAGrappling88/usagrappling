@@ -21,7 +21,15 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
+    const mailersendToken = Deno.env.get('MAILERSEND_API_TOKEN')
+
+    if (!mailersendToken) {
+      console.error('MAILERSEND_API_TOKEN is not configured')
+      return new Response(
+        JSON.stringify({ error: 'Email service not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     // Get all super_admin users to notify
     const supabase = createClient(supabaseUrl, serviceRoleKey)
@@ -47,18 +55,61 @@ Deno.serve(async (req) => {
 
     const adminEmails = adminProfiles?.map(p => p.email).filter(Boolean) || []
 
-    // Log the notification (we'll use console since no email domain is set up yet)
-    console.log(`New signup requesting admin access: ${email}`)
-    console.log(`Super admins to notify: ${adminEmails.join(', ')}`)
+    if (adminEmails.length === 0) {
+      console.log('No admin emails found in profiles')
+      return new Response(
+        JSON.stringify({ success: true, message: 'No admin emails found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // Store notification in a simple way - the super admin will see pending users in the dashboard
-    // When an email domain is configured, this can be enhanced to send actual emails
+    // Send email via MailerSend to each super admin
+    const results = []
+    for (const adminEmail of adminEmails) {
+      const response = await fetch('https://api.mailersend.com/v1/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${mailersendToken}`,
+        },
+        body: JSON.stringify({
+          from: {
+            email: 'noreply@usa-grappling.com',
+            name: 'USA Grappling',
+          },
+          to: [{ email: adminEmail }],
+          subject: `New Admin Access Request: ${email}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2 style="color: #1a1a2e;">New Admin Access Request</h2>
+              <p>A new user has signed up and is requesting admin access:</p>
+              <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0;"><strong>Email:</strong> ${email}</p>
+              </div>
+              <p>Please log in to the <a href="https://usagrappling.lovable.app/admin" style="color: #2563eb;">Admin Dashboard</a> to approve or deny this request.</p>
+              <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;" />
+              <p style="color: #999; font-size: 12px;">USA Grappling Admin Notifications</p>
+            </div>
+          `,
+          text: `New admin access request from ${email}. Log in to the admin dashboard to approve or deny.`,
+        }),
+      })
+
+      if (response.ok) {
+        results.push({ email: adminEmail, status: 'sent' })
+        console.log(`Email sent to ${adminEmail}`)
+      } else {
+        const errorBody = await response.text()
+        results.push({ email: adminEmail, status: 'failed', error: errorBody })
+        console.error(`Failed to send email to ${adminEmail}: ${response.status} ${errorBody}`)
+      }
+    }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Notification logged for ${adminEmails.length} super admin(s)`,
-        notified: adminEmails
+        message: `Notification sent to ${results.filter(r => r.status === 'sent').length} super admin(s)`,
+        results,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
