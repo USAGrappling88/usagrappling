@@ -57,6 +57,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (!currentSession?.user) {
         setIsAdmin(false);
+        setIsSuperAdmin(false);
         setIsLoading(false);
         return;
       }
@@ -66,8 +67,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const admin = await checkAdminRole(currentSession.user.id);
-      setIsAdmin(admin);
+      const roles = await checkAdminRole(currentSession.user.id);
+      setIsAdmin(roles.isAdmin);
+      setIsSuperAdmin(roles.isSuperAdmin);
       checkedAdminUserIdRef.current = nextUserId;
       setIsLoading(false);
     };
