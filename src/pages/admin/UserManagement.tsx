@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
-import { Loader2, UserCheck, UserX, Shield, RefreshCw } from 'lucide-react';
+import { Loader2, UserCheck, UserX, Shield, RefreshCw, Crown } from 'lucide-react';
 
 interface Profile {
   id: string;
@@ -14,24 +15,36 @@ interface Profile {
   created_at: string;
 }
 
+interface UserRole {
+  user_id: string;
+  role: string;
+}
+
 export const UserManagementPanel = () => {
+  const { isSuperAdmin } = useAuth();
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const fetchProfiles = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const [profilesRes, rolesRes] = await Promise.all([
+      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+      supabase.from('user_roles').select('user_id, role'),
+    ]);
 
-    if (error) {
+    if (profilesRes.error) {
       toast.error('Failed to load users');
-      console.error(error);
+      console.error(profilesRes.error);
     } else {
-      setProfiles(data || []);
+      setProfiles(profilesRes.data || []);
     }
+
+    if (!rolesRes.error) {
+      setUserRoles(rolesRes.data || []);
+    }
+
     setLoading(false);
   };
 
@@ -39,10 +52,14 @@ export const UserManagementPanel = () => {
     fetchProfiles();
   }, []);
 
+  const getUserRole = (userId: string) => {
+    const role = userRoles.find(r => r.user_id === userId);
+    return role?.role || null;
+  };
+
   const updateStatus = async (userId: string, newStatus: string) => {
     setActionLoading(userId);
 
-    // Update profile status
     const { error: profileError } = await supabase
       .from('profiles')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
@@ -54,7 +71,6 @@ export const UserManagementPanel = () => {
       return;
     }
 
-    // If approving, also grant the admin role
     if (newStatus === 'approved') {
       const { error: roleError } = await supabase
         .from('user_roles')
@@ -67,7 +83,6 @@ export const UserManagementPanel = () => {
         toast.success('User approved and granted admin access');
       }
     } else if (newStatus === 'denied') {
-      // Remove admin role if denying
       const { error: roleError } = await supabase
         .from('user_roles')
         .delete()
@@ -84,6 +99,45 @@ export const UserManagementPanel = () => {
     fetchProfiles();
   };
 
+  const promoteToSuperAdmin = async (userId: string) => {
+    setActionLoading(userId);
+
+    // Remove existing admin role and add super_admin
+    await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'admin' as const);
+    const { error } = await supabase
+      .from('user_roles')
+      .upsert({ user_id: userId, role: 'super_admin' as const }, { onConflict: 'user_id,role' });
+
+    if (error) {
+      toast.error('Failed to promote to super admin');
+      console.error(error);
+    } else {
+      toast.success('User promoted to super admin');
+    }
+
+    setActionLoading(null);
+    fetchProfiles();
+  };
+
+  const demoteFromSuperAdmin = async (userId: string) => {
+    setActionLoading(userId);
+
+    await supabase.from('user_roles').delete().eq('user_id', userId).eq('role', 'super_admin' as const);
+    const { error } = await supabase
+      .from('user_roles')
+      .upsert({ user_id: userId, role: 'admin' as const }, { onConflict: 'user_id,role' });
+
+    if (error) {
+      toast.error('Failed to demote from super admin');
+      console.error(error);
+    } else {
+      toast.success('User demoted to admin');
+    }
+
+    setActionLoading(null);
+    fetchProfiles();
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -93,6 +147,17 @@ export const UserManagementPanel = () => {
       default:
         return <Badge variant="secondary">Pending</Badge>;
     }
+  };
+
+  const getRoleBadge = (userId: string) => {
+    const role = getUserRole(userId);
+    if (role === 'super_admin') {
+      return <Badge className="bg-purple-600 hover:bg-purple-700 ml-2"><Crown className="w-3 h-3 mr-1" /> Super Admin</Badge>;
+    }
+    if (role === 'admin') {
+      return <Badge className="bg-blue-600 hover:bg-blue-700 ml-2"><Shield className="w-3 h-3 mr-1" /> Admin</Badge>;
+    }
+    return null;
   };
 
   if (loading) {
@@ -180,6 +245,7 @@ export const UserManagementPanel = () => {
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Signed Up</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -189,6 +255,7 @@ export const UserManagementPanel = () => {
                   <TableRow key={profile.id}>
                     <TableCell className="font-medium">{profile.email || 'N/A'}</TableCell>
                     <TableCell>{getStatusBadge(profile.status)}</TableCell>
+                    <TableCell>{getRoleBadge(profile.id)}</TableCell>
                     <TableCell>{new Date(profile.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="space-x-2">
                       {profile.status === 'denied' && (
@@ -202,14 +269,38 @@ export const UserManagementPanel = () => {
                         </Button>
                       )}
                       {profile.status === 'approved' && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateStatus(profile.id, 'denied')}
-                          disabled={actionLoading === profile.id}
-                        >
-                          <UserX className="w-4 h-4 mr-1" /> Revoke
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => updateStatus(profile.id, 'denied')}
+                            disabled={actionLoading === profile.id}
+                          >
+                            <UserX className="w-4 h-4 mr-1" /> Revoke
+                          </Button>
+                          {isSuperAdmin && getUserRole(profile.id) === 'admin' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                              onClick={() => promoteToSuperAdmin(profile.id)}
+                              disabled={actionLoading === profile.id}
+                            >
+                              <Crown className="w-4 h-4 mr-1" /> Promote to Super Admin
+                            </Button>
+                          )}
+                          {isSuperAdmin && getUserRole(profile.id) === 'super_admin' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+                              onClick={() => demoteFromSuperAdmin(profile.id)}
+                              disabled={actionLoading === profile.id}
+                            >
+                              <Shield className="w-4 h-4 mr-1" /> Demote to Admin
+                            </Button>
+                          )}
+                        </>
                       )}
                     </TableCell>
                   </TableRow>

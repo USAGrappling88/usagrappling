@@ -13,7 +13,7 @@ import { WorldTeamPanel } from "./WorldTeamOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
+  const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("press");
 
   if (authLoading) {
