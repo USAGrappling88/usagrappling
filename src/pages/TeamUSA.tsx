@@ -263,6 +263,66 @@ const TeamUSA = () => {
               </Button>
             </div>
           </div>
+
+          {/* Selection Criteria */}
+          <div className="mt-16">
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" /> Selection Criteria
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              Athletes who did not win their division at official qualifying events may still earn a spot on Team USA through petition based on proven competitive credentials.
+            </p>
+
+            {/* UWW & SJJIF Trials - Non-Qualifier Winners */}
+            <Card className="mb-6">
+              <CardContent className="p-8">
+                <h4 className="font-bold text-lg mb-4">UWW & SJJIF Trials Selection Criteria — Non-Qualifier Winners</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Athletes may petition for Team USA selection based on the following credentials (ranked by priority):
+                </p>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground ml-2">
+                  <li>UWW Grappling Worlds Medalist</li>
+                  <li>Returning USA Grappling Team Members</li>
+                  <li>ADCC Adult/Youth Worlds Medalist and/or IBJJF World Champion Gi/No Gi (Juveniles/Adults) / Pan Kids Champion Gi/No Gi (Kids)</li>
+                  <li>N. American ADCC Adult/Youth Trials Medalist</li>
+                  <li>ADCC Adult/Youth Worlds Invitee (2024 & 2026)</li>
+                  <li>IBJJF Worlds/Pan Kids Medalist</li>
+                  <li>State Placer in Wrestling</li>
+                  <li>Fargo Placer in Wrestling</li>
+                  <li>AGF Kids Worlds Medalist</li>
+                </ol>
+              </CardContent>
+            </Card>
+
+            {/* World Championships - Self-Funded Positions */}
+            <Card className="mb-6 border-l-4 border-l-yellow-500">
+              <CardContent className="p-8">
+                <h4 className="font-bold text-lg mb-4">UWW Grappling & SJJIF World Championships Selection Criteria — Self-Funded Positions</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Remaining roster positions outside of Trials winners are filled through self-funded selection. Priority order:
+                </p>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground ml-2">
+                  <li>Trials Winner (e.g., SJJIF trials winner electing to self-fund for UWW Grappling World Championship / UWW trials winner electing to self-fund for SJJIF World Championship — if no show to SJJIF trials for X-Factor match or does not win X-Factor match)</li>
+                  <li>Trials Silver Medalist (UWW and/or SJJIF trials silver medalist electing to self-fund for UWW and/or SJJIF world championships)</li>
+                  <li>UWW Grappling Worlds Medalist</li>
+                  <li>Returning USA Grappling Team Members</li>
+                  <li>ADCC Adult/Youth Worlds Medalist and/or IBJJF World Champion Gi/No Gi (Juveniles/Adults) / Pan Kids Champion Gi/No Gi (Kids)</li>
+                  <li>N. American ADCC Adult/Youth Trials Medalist</li>
+                  <li>ADCC Adult/Youth Worlds Invitee (2024 & 2026)</li>
+                  <li>IBJJF Worlds/Pan Kids Medalist</li>
+                  <li>State Placer in Wrestling</li>
+                  <li>Fargo Placer in Wrestling</li>
+                  <li>AGF Kids Worlds Medalist</li>
+                </ol>
+              </CardContent>
+            </Card>
+
+            <div className="bg-muted/50 rounded-lg p-6">
+              <p className="text-sm text-muted-foreground">
+                <strong>Note:</strong> All petition selections are subject to review and approval by USA Grappling. Athletes must meet all eligibility requirements including valid USA Grappling membership and U.S. passport eligibility.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
