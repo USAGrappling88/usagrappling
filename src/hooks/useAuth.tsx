@@ -19,6 +19,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const previousUserIdRef = useRef<string | null>(null);
   const checkedAdminUserIdRef = useRef<string | null>(null);
@@ -27,15 +28,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', userId)
-      .eq('role', 'admin')
-      .maybeSingle();
+      .eq('user_id', userId);
     
     if (error) {
       console.error('Error checking admin role:', error);
-      return false;
+      return { isAdmin: false, isSuperAdmin: false };
     }
-    return !!data;
+    const roles = data?.map(r => r.role) || [];
+    return {
+      isAdmin: roles.includes('admin') || roles.includes('super_admin'),
+      isSuperAdmin: roles.includes('super_admin'),
+    };
   };
 
   useEffect(() => {
