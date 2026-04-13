@@ -67,9 +67,11 @@ const AdminDashboard = () => {
             <TabsTrigger value="staff" className="flex items-center gap-2">
               <Users className="w-4 h-4" /> Staff
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <UserCog className="w-4 h-4" /> Users
-            </TabsTrigger>
+            {isSuperAdmin && (
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <UserCog className="w-4 h-4" /> Users
+              </TabsTrigger>
+            )}
             <TabsTrigger value="world-team" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" /> World Team
             </TabsTrigger>
@@ -78,7 +80,7 @@ const AdminDashboard = () => {
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
-          <TabsContent value="users"><UserManagementPanel /></TabsContent>
+          {isSuperAdmin && <TabsContent value="users"><UserManagementPanel /></TabsContent>}
           <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
         </Tabs>
       </div>
