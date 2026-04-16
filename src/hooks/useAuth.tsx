@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const previousUserIdRef = useRef<string | null>(null);
   const checkedAdminUserIdRef = useRef<string | null>(null);
+  const authSyncIdRef = useRef(0);
 
   const checkAdminRole = async (userId: string) => {
     const { data, error } = await supabase
@@ -43,19 +44,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const syncAuthState = async (currentSession: Session | null) => {
+      const syncId = ++authSyncIdRef.current;
       const nextUserId = currentSession?.user?.id ?? null;
       const userChanged = previousUserIdRef.current !== nextUserId;
 
       if (userChanged) {
+        if (authSyncIdRef.current !== syncId) return;
         setIsLoading(true);
         checkedAdminUserIdRef.current = null;
       }
 
+      if (authSyncIdRef.current !== syncId) return;
       previousUserIdRef.current = nextUserId;
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
       if (!currentSession?.user) {
+        if (authSyncIdRef.current !== syncId) return;
         setIsAdmin(false);
         setIsSuperAdmin(false);
         setIsLoading(false);
@@ -63,11 +68,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (checkedAdminUserIdRef.current === nextUserId) {
+        if (authSyncIdRef.current !== syncId) return;
         setIsLoading(false);
         return;
       }
 
       const roles = await checkAdminRole(currentSession.user.id);
+      if (authSyncIdRef.current !== syncId) return;
       setIsAdmin(roles.isAdmin);
       setIsSuperAdmin(roles.isSuperAdmin);
       checkedAdminUserIdRef.current = nextUserId;
@@ -95,10 +102,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    setIsLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    if (error) {
+      setIsLoading(false);
+      return { error: error as Error | null };
+    }
+
+    const nextSession = data.session ?? null;
+    const nextUser = data.user ?? nextSession?.user ?? null;
+
+    if (nextUser) {
+      previousUserIdRef.current = nextUser.id;
+      setSession(nextSession);
+      setUser(nextUser);
+
+      const roles = await checkAdminRole(nextUser.id);
+      setIsAdmin(roles.isAdmin);
+      setIsSuperAdmin(roles.isSuperAdmin);
+      checkedAdminUserIdRef.current = nextUser.id;
+    }
+
+    setIsLoading(false);
     return { error: error as Error | null };
   };
 
@@ -124,6 +154,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    authSyncIdRef.current += 1;
     const { error } = await supabase.auth.signOut();
 
     if (error) {
