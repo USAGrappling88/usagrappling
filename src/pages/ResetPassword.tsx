@@ -18,21 +18,45 @@ const ResetPassword = () => {
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // Check if user arrived via recovery link
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get('type');
+    const establishRecoverySession = async () => {
+      try {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const queryParams = new URLSearchParams(window.location.search);
 
-    if (type === 'recovery') {
-      setIsValidSession(true);
-      setIsChecking(false);
-      return;
-    }
+        const code = queryParams.get('code');
+        const type = queryParams.get('type') ?? hashParams.get('type');
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
 
-    // Also check if there's an active session from the recovery flow
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsValidSession(!!session);
-      setIsChecking(false);
-    });
+        if (code) {
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+          setIsValidSession(!!data.session);
+        } else if (type === 'recovery' && accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+          setIsValidSession(!!data.session);
+        } else {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          setIsValidSession(!!data.session);
+        }
+
+        if (window.location.hash || window.location.search) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      } catch (error) {
+        console.error('Error validating reset password session:', error);
+        setIsValidSession(false);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    void establishRecoverySession();
   }, []);
 
   const handleReset = async (e: React.FormEvent) => {
@@ -53,10 +77,12 @@ const ResetPassword = () => {
 
     if (error) {
       toast.error(error.message);
-    } else {
-      toast.success('Password updated successfully!');
-      navigate('/admin');
+      return;
     }
+
+    await supabase.auth.signOut({ scope: 'local' });
+    toast.success('Password updated successfully. Please sign in with your new password.');
+    navigate('/auth?redirect=/admin');
   };
 
   if (isChecking) {

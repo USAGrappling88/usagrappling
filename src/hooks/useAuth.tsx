@@ -74,16 +74,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     };
 
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, currentSession) => {
         void syncAuthState(currentSession);
       }
     );
 
-    // THEN check for existing session
-    void supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      void syncAuthState(currentSession);
+    void supabase.auth.getSession().then(async ({ data: { session: currentSession }, error }) => {
+      if (error) {
+        console.error('Error restoring session:', error);
+        await supabase.auth.signOut({ scope: 'local' });
+        await syncAuthState(null);
+        return;
+      }
+
+      await syncAuthState(currentSession);
     });
 
     return () => subscription.unsubscribe();
@@ -119,9 +124,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error('Error signing out globally, clearing local session instead:', error);
+      await supabase.auth.signOut({ scope: 'local' });
+    }
+
+    setUser(null);
+    setSession(null);
     setIsAdmin(false);
     setIsSuperAdmin(false);
+    checkedAdminUserIdRef.current = null;
+    previousUserIdRef.current = null;
   };
 
   return (
