@@ -144,6 +144,9 @@ export const WorldTeamPanel = () => {
             <SelectItem value="admin_rating">Sort by Rating</SelectItem>
           </SelectContent>
         </Select>
+        <Button onClick={handleExport} variant="outline" className="gap-2">
+          <Download className="w-4 h-4" /> Export CSV
+        </Button>
       </div>
 
       {loading ? (
