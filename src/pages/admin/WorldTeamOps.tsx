@@ -92,6 +92,33 @@ export const WorldTeamPanel = () => {
     }
   };
 
+  const handleExport = () => {
+    if (!filtered.length) {
+      toast.error("No petitions to export");
+      return;
+    }
+    const headers = Object.keys(filtered[0]) as (keyof Petition)[];
+    const escape = (val: any) => {
+      if (val === null || val === undefined) return "";
+      const s = String(val).replace(/"/g, '""');
+      return /[",\n]/.test(s) ? `"${s}"` : s;
+    };
+    const csv = [
+      headers.join(","),
+      ...filtered.map((row) => headers.map((h) => escape(row[h])).join(",")),
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `world-team-petitions-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filtered.length} petitions`);
+  };
+
   const filtered = petitions.filter((p) => {
     const term = search.toLowerCase();
     return `${p.first_name} ${p.last_name} ${p.email} ${p.style}`.toLowerCase().includes(term);
