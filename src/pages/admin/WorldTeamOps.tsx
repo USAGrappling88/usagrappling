@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Trash2, Star, Eye, Search } from "lucide-react";
+import { Loader2, Trash2, Star, Eye, Search, Download } from "lucide-react";
 
 interface Petition {
   id: string;
