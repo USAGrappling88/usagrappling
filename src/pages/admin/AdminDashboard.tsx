@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
@@ -12,11 +12,12 @@ import { UserManagementPanel } from "./UserManagement";
 import { WorldTeamPanel } from "./WorldTeamOps";
 import { MarketingPanel } from "./MarketingOps";
 import { HermesPanel } from "./HermesOps";
+import { KanbanPanel } from "./KanbanOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState("press");
+  const [activeTab, setActiveTab] = useState("kanban");
 
   if (authLoading) {
     return (
