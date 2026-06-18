@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
@@ -12,11 +12,12 @@ import { UserManagementPanel } from "./UserManagement";
 import { WorldTeamPanel } from "./WorldTeamOps";
 import { MarketingPanel } from "./MarketingOps";
 import { HermesPanel } from "./HermesOps";
+import { KanbanPanel } from "./KanbanOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState("press");
+  const [activeTab, setActiveTab] = useState("kanban");
 
   if (authLoading) {
     return (
@@ -60,6 +61,9 @@ const AdminDashboard = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
+            <TabsTrigger value="kanban" className="flex items-center gap-2">
+              <LayoutDashboard className="w-4 h-4" /> Kanban
+            </TabsTrigger>
             <TabsTrigger value="press" className="flex items-center gap-2">
               <FileText className="w-4 h-4" /> Press
             </TabsTrigger>
@@ -85,6 +89,7 @@ const AdminDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="kanban"><KanbanPanel /></TabsContent>
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
