@@ -61,6 +61,9 @@ const AdminDashboard = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
+            <TabsTrigger value="kanban" className="flex items-center gap-2">
+              <LayoutDashboard className="w-4 h-4" /> Kanban
+            </TabsTrigger>
             <TabsTrigger value="press" className="flex items-center gap-2">
               <FileText className="w-4 h-4" /> Press
             </TabsTrigger>
@@ -86,6 +89,7 @@ const AdminDashboard = () => {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="kanban"><KanbanPanel /></TabsContent>
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
