@@ -85,6 +85,9 @@ const AdminDashboard = () => {
             <TabsTrigger value="marketing" className="flex items-center gap-2">
               <Megaphone className="w-4 h-4" /> Marketing
             </TabsTrigger>
+            <TabsTrigger value="compose" className="flex items-center gap-2">
+              <PenSquare className="w-4 h-4" /> Compose
+            </TabsTrigger>
             <TabsTrigger value="hermes" className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4" /> Hermes
             </TabsTrigger>
@@ -97,6 +100,7 @@ const AdminDashboard = () => {
           {isSuperAdmin && <TabsContent value="users"><UserManagementPanel /></TabsContent>}
           <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
           <TabsContent value="marketing"><MarketingPanel /></TabsContent>
+          <TabsContent value="compose"><ComposePanel /></TabsContent>
           <TabsContent value="hermes"><HermesPanel /></TabsContent>
         </Tabs>
       </div>
