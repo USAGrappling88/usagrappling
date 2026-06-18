@@ -4,12 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
 import { UserManagementPanel } from "./UserManagement";
 import { WorldTeamPanel } from "./WorldTeamOps";
+import { MarketingPanel } from "./MarketingOps";
+import { HermesPanel } from "./HermesOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -75,6 +77,12 @@ const AdminDashboard = () => {
             <TabsTrigger value="world-team" className="flex items-center gap-2">
               <Trophy className="w-4 h-4" /> World Team
             </TabsTrigger>
+            <TabsTrigger value="marketing" className="flex items-center gap-2">
+              <Megaphone className="w-4 h-4" /> Marketing
+            </TabsTrigger>
+            <TabsTrigger value="hermes" className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" /> Hermes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="press"><PressPanel /></TabsContent>
@@ -82,6 +90,8 @@ const AdminDashboard = () => {
           <TabsContent value="staff"><StaffPanel /></TabsContent>
           {isSuperAdmin && <TabsContent value="users"><UserManagementPanel /></TabsContent>}
           <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
+          <TabsContent value="marketing"><MarketingPanel /></TabsContent>
+          <TabsContent value="hermes"><HermesPanel /></TabsContent>
         </Tabs>
       </div>
     </Layout>
