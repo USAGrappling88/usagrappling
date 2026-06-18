@@ -1,22 +1,19 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { opsSupabase } from "@/lib/opsSupabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
-  ExternalLink, Copy, Loader2, ChevronUp, ChevronDown, RefreshCw,
-  Download, CheckSquare, Square, Send, ListChecks,
+  Loader2, RefreshCw, Download, CheckSquare, Square,
+  Send, ExternalLink, X,
+  Megaphone, Mail, CheckCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -32,543 +29,518 @@ interface MarketingTarget {
   region: string | null;
   member_count: number | null;
   status: string;
-  tags: string[] | null;
   notes: string | null;
-  contact_name: string | null;
-  phone: string | null;
   email: string | null;
+  phone: string | null;
+  contact_name: string | null;
 }
 
 const TYPE_ICONS: Record<string, string> = {
-  gym: "🥋", facebook_group: "👥", facebook_page: "📄",
-  instagram: "📸", tiktok: "🎵", producer_prospect: "🏟", email_contact: "📧",
+  gym: "🥋",
+  facebook_group: "👥",
+  facebook_page: "📄",
+  instagram: "📸",
+  tiktok: "🎵",
+  producer_prospect: "🏟",
+  email_contact: "📧",
 };
 
-const TYPE_LABELS: Record<string, string> = {
-  gym: "Gym", facebook_group: "FB Group", facebook_page: "FB Page",
-  instagram: "Instagram", tiktok: "TikTok", producer_prospect: "Producer", email_contact: "Email",
+const STATUS_COLORS: Record<string, string> = {
+  new: "bg-gray-100 text-gray-700",
+  contacted: "bg-blue-100 text-blue-700",
+  responded: "bg-yellow-100 text-yellow-700",
+  converted: "bg-green-100 text-green-700",
+  not_interested: "bg-red-100 text-red-700",
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  new: "bg-gray-100 text-gray-700 hover:bg-gray-100",
-  contacted: "bg-blue-100 text-blue-700 hover:bg-blue-100",
-  responded: "bg-yellow-100 text-yellow-700 hover:bg-yellow-100",
-  converted: "bg-green-100 text-green-700 hover:bg-green-100",
-  not_interested: "bg-red-100 text-red-600 hover:bg-red-100",
-};
-
-const CONTENT_TEMPLATES = [
+const TEMPLATES = [
   {
     id: "event_promo",
-    label: "Event Promotion",
-    text: "Hey! USA Grappling is hosting an upcoming event in your area. We'd love to have your athletes compete. Check out the details and registration at usagrappling.com — happy to answer any questions!",
+    label: "Event Promo",
+    subject: "USA Grappling — Upcoming Event in Your Area",
+    text: "Hey! USA Grappling is hosting an upcoming event and we'd love to have your athletes compete. We're the national governing body for sport jiu jitsu and grappling, running SJJIF-sanctioned events nationwide.\n\nCheck out registration at usagrappling.com — happy to answer any questions!",
   },
   {
     id: "membership",
     label: "USAG/AAU Membership",
-    text: "Hi! Did you know USA Grappling / AAU memberships include $1M liability insurance, competition access, and athlete benefits? We'd love to partner with your gym. Reach out and let's connect!",
+    subject: "USAG / AAU Membership Benefits for Your Gym",
+    text: "Hi! USA Grappling / AAU memberships include $1M liability insurance, access to sanctioned competitions, and exclusive athlete benefits — all under one national umbrella.\n\nWe'd love to partner with your gym. Learn more at usagrappling.com or reply here and let's connect!",
+  },
+  {
+    id: "japan_qualifier",
+    label: "Japan Qualifier",
+    subject: "Win a Sponsored Trip to Japan — USA Grappling Youth Qualifier",
+    text: "Attention youth athletes and coaches! USA Grappling is hosting the Japan Open Qualifier for U11–U17 divisions.\n\nWin your division = Team USA selection + sponsored trip to compete in Japan.\nGi only · SJJIF Rules · Register at usagrappling.com",
   },
   {
     id: "producer",
-    label: "Event Producer Inquiry",
-    text: "Hi! USA Grappling is expanding our event network and looking for experienced local producers to host events in their region. Given your facility, I think you'd be a great fit. Can we set up a quick call?",
-  },
-  {
-    id: "general",
-    label: "General Introduction",
-    text: "Hey! I'm Blair with USA Grappling — we're the national governing body for sport jiu jitsu and grappling events. Would love to connect and explore ways to work together!",
+    label: "Event Producer",
+    subject: "Event Hosting Opportunity — USA Grappling",
+    text: "Hi! USA Grappling is expanding our national event network and looking for experienced producers to host events in their region.\n\nGiven your facility and experience, I think you'd be a great fit. Can we set up a quick call to discuss the partnership?",
   },
 ];
 
-export const MarketingPanel = () => {
+type AppMode = "list" | "campaign" | "queue";
+
+export const MarketingOps = () => {
   const [targets, setTargets] = useState<MarketingTarget[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [stateFilter, setStateFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [sortKey, setSortKey] = useState<keyof MarketingTarget>("name");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [filterState, setFilterState] = useState("all");
+  const [filterType, setFilterType] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [mode, setMode] = useState<AppMode>("list");
 
-  // Queue mode
-  const [mode, setMode] = useState<"list" | "queue">("list");
+  // Campaign state
+  const [campaignMessage, setCampaignMessage] = useState("");
+  const [campaignSubject, setCampaignSubject] = useState("");
+  const [campaignTemplate, setCampaignTemplate] = useState("");
+  const [campaignChannel, setCampaignChannel] = useState("dm");
+  const [sending, setSending] = useState(false);
+  const [emailResults, setEmailResults] = useState<{ sent: number; failed: number } | null>(null);
+  const [socialQueue, setSocialQueue] = useState<MarketingTarget[]>([]);
   const [queueIndex, setQueueIndex] = useState(0);
-  const [queueTargets, setQueueTargets] = useState<MarketingTarget[]>([]);
-
-  // Bulk contact dialog
-  const [showContactDialog, setShowContactDialog] = useState(false);
-  const [contactMessage, setContactMessage] = useState("");
-  const [contactChannel, setContactChannel] = useState("dm");
-  const [contactTemplate, setContactTemplate] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [queueDone, setQueueDone] = useState(false);
 
   const fetchTargets = async () => {
     setLoading(true);
-    const { data, error } = await opsSupabase
-      .from("marketing_targets")
-      .select("*")
-      .order("name");
-    if (error) toast.error(`Failed to load: ${error.message}`);
+    const { data } = await opsSupabase.from("marketing_targets").select("*").order("name");
     setTargets((data as MarketingTarget[]) || []);
     setLoading(false);
   };
 
   useEffect(() => { fetchTargets(); }, []);
 
-  const states = useMemo(() => {
-    return [...new Set(targets.map(t => t.state).filter(Boolean))].sort() as string[];
-  }, [targets]);
+  const filtered = targets.filter((t) => {
+    const matchSearch = !search || t.name.toLowerCase().includes(search.toLowerCase());
+    const matchState = filterState === "all" || t.state === filterState || t.region === filterState;
+    const matchType = filterType === "all" || t.type === filterType;
+    const matchStatus = filterStatus === "all" || t.status === filterStatus;
+    return matchSearch && matchState && matchType && matchStatus;
+  });
 
-  const filtered = useMemo(() => {
-    return targets
-      .filter(t => {
-        const matchSearch = !search ||
-          t.name.toLowerCase().includes(search.toLowerCase()) ||
-          (t.handle && t.handle.toLowerCase().includes(search.toLowerCase()));
-        if (!matchSearch) return false;
-        if (stateFilter !== "all" && t.state !== stateFilter && t.region !== stateFilter) return false;
-        if (typeFilter !== "all" && t.type !== typeFilter) return false;
-        if (statusFilter !== "all" && t.status !== statusFilter) return false;
-        return true;
-      })
-      .sort((a, b) => {
-        const av = (a[sortKey] ?? "") as any;
-        const bv = (b[sortKey] ?? "") as any;
-        if (av < bv) return sortDir === "asc" ? -1 : 1;
-        if (av > bv) return sortDir === "asc" ? 1 : -1;
-        return 0;
-      });
-  }, [targets, search, stateFilter, typeFilter, statusFilter, sortKey, sortDir]);
-
-  const handleSort = (key: keyof MarketingTarget) => {
-    if (sortKey === key) setSortDir(d => d === "asc" ? "desc" : "asc");
-    else { setSortKey(key); setSortDir("asc"); }
-  };
+  const regions = [...new Set(targets.map(t => t.region).filter(Boolean))].sort() as string[];
+  const states = [...new Set(targets.map(t => t.state).filter(Boolean))].sort() as string[];
 
   const toggleSelect = (id: string) => {
     setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
     });
   };
-
   const toggleAll = () => {
-    if (selected.size === filtered.length && filtered.length > 0) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(filtered.map(t => t.id)));
-    }
+    setSelected(selected.size === filtered.length ? new Set() : new Set(filtered.map(t => t.id)));
   };
 
-  const applyTemplate = (templateId: string) => {
-    const tpl = CONTENT_TEMPLATES.find(t => t.id === templateId);
-    if (tpl) { setContactMessage(tpl.text); setContactTemplate(templateId); }
+  const applyTemplate = (tplId: string) => {
+    const tpl = TEMPLATES.find(t => t.id === tplId);
+    if (tpl) { setCampaignMessage(tpl.text); setCampaignSubject(tpl.subject); setCampaignTemplate(tplId); }
   };
 
-  const handleBulkContact = async () => {
-    if (!contactMessage.trim()) { toast.error("Enter a message"); return; }
-    setSubmitting(true);
-    const ids = [...selected];
-    const now = new Date().toISOString();
+  const selectedTargets = targets.filter(t => selected.has(t.id));
+  const emailTargets = selectedTargets.filter(t => t.email);
+  const socialTargets = selectedTargets.filter(t => !t.email && t.url);
 
-    await opsSupabase
-      .from("marketing_targets")
-      .update({ status: "contacted" })
-      .in("id", ids);
-
-    const logs = ids.map(id => ({
-      target_id: id,
-      channel: contactChannel,
-      message_sent: contactMessage,
-      contacted_at: now,
-      status: "sent",
-    }));
-    await opsSupabase.from("outreach_log").insert(logs);
-
-    setTargets(prev => prev.map(t => ids.includes(t.id) ? { ...t, status: "contacted" } : t));
-    setSelected(new Set());
-    setShowContactDialog(false);
-    setContactMessage("");
-    setContactTemplate("");
-    toast.success(`Logged outreach for ${ids.length} target${ids.length > 1 ? "s" : ""}`);
-    setSubmitting(false);
-  };
-
-  const exportCSV = () => {
-    const rows = filtered;
-    const headers = ["Name", "Type", "Platform", "Handle", "City", "State", "Region", "Members", "Status", "Email", "Phone", "Contact", "URL", "Notes"];
-    const csv = [
-      headers.join(","),
-      ...rows.map(t => [
-        `"${t.name.replace(/"/g, "'")}"`,
-        t.type || "",
-        t.platform || "",
-        t.handle || "",
-        t.city || "",
-        t.state || "",
-        t.region || "",
-        t.member_count || "",
-        t.status,
-        t.email || "",
-        t.phone || "",
-        t.contact_name || "",
-        t.url || "",
-        `"${(t.notes || "").replace(/"/g, "'")}"`,
-      ].join(","))
-    ].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url;
-    a.download = `usag_marketing_targets_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-    toast.success(`Exported ${rows.length} targets`);
-  };
-
-  const startQueue = () => {
-    const uncontacted = filtered.filter(t => t.status === "new");
-    if (uncontacted.length === 0) { toast.info("No new targets in current filter"); return; }
-    setQueueTargets(uncontacted);
+  const startCampaign = () => {
+    if (selected.size === 0) { toast.error("Select at least one target"); return; }
+    if (TEMPLATES.length > 0 && !campaignMessage) applyTemplate(TEMPLATES[0].id);
+    setMode("campaign");
+    setEmailResults(null);
+    setSocialQueue([]);
     setQueueIndex(0);
-    setContactMessage(CONTENT_TEMPLATES[0].text);
-    setContactTemplate(CONTENT_TEMPLATES[0].id);
-    setMode("queue");
+    setQueueDone(false);
   };
 
-  const logQueueTarget = async (target: MarketingTarget) => {
-    if (!contactMessage.trim()) { toast.error("Enter a message first"); return; }
-    setSubmitting(true);
+  const launchCampaign = async () => {
+    if (!campaignMessage.trim()) { toast.error("Write a message first"); return; }
+    setSending(true);
+
+    if (emailTargets.length > 0) {
+      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <div style="white-space:pre-wrap;line-height:1.5;color:#222;">${campaignMessage.replace(/\n/g, "<br/>")}</div>
+        <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
+        <p style="font-size:12px;color:#888;">USA Grappling · usagrappling.com</p>
+      </div>`;
+
+      try {
+        const { data } = await opsSupabase.functions.invoke("send-email", {
+          body: {
+            to: emailTargets.map(t => t.email),
+            subject: campaignSubject || "Message from USA Grappling",
+            html,
+            from_name: "USA Grappling",
+          },
+        });
+        setEmailResults({ sent: data?.sent || emailTargets.length, failed: data?.failed || 0 });
+
+        const now = new Date().toISOString();
+        await opsSupabase.from("outreach_log").insert(
+          emailTargets.map(t => ({
+            target_id: t.id,
+            channel: "email",
+            message_sent: campaignMessage,
+            contacted_at: now,
+            status: "sent",
+          }))
+        );
+        await opsSupabase.from("marketing_targets")
+          .update({ status: "contacted" })
+          .in("id", emailTargets.map(t => t.id));
+        setTargets(prev => prev.map(t => emailTargets.find(e => e.id === t.id) ? { ...t, status: "contacted" } : t));
+      } catch (err) {
+        setEmailResults({ sent: 0, failed: emailTargets.length });
+      }
+    }
+
+    if (socialTargets.length > 0) {
+      setSocialQueue(socialTargets);
+      setQueueIndex(0);
+      setMode("queue");
+    } else {
+      toast.success("Campaign sent!");
+      setSelected(new Set());
+      setMode("list");
+    }
+
+    setSending(false);
+  };
+
+  const logAndAdvance = async (target: MarketingTarget) => {
     await opsSupabase.from("marketing_targets").update({ status: "contacted" }).eq("id", target.id);
     await opsSupabase.from("outreach_log").insert({
       target_id: target.id,
-      channel: contactChannel,
-      message_sent: contactMessage,
+      channel: campaignChannel,
+      message_sent: campaignMessage,
       contacted_at: new Date().toISOString(),
       status: "sent",
     });
     setTargets(prev => prev.map(t => t.id === target.id ? { ...t, status: "contacted" } : t));
     toast.success(`Logged: ${target.name}`);
-    if (queueIndex + 1 >= queueTargets.length) {
-      toast.success("Queue complete!");
-      setMode("list");
+    if (queueIndex + 1 >= socialQueue.length) {
+      setQueueDone(true);
     } else {
       setQueueIndex(i => i + 1);
     }
-    setSubmitting(false);
   };
 
-  const skipQueue = () => {
-    if (queueIndex + 1 >= queueTargets.length) { setMode("list"); return; }
-    setQueueIndex(i => i + 1);
+  const exportCSV = () => {
+    const headers = ["Name","Type","City","State","Region","Members","Status","Email","URL","Notes"];
+    const csv = [
+      headers.join(","),
+      ...filtered.map(t => [
+        `"${t.name}"`, t.type||"", t.city||"", t.state||"", t.region||"",
+        t.member_count||"", t.status, t.email||"", t.url||"",
+        `"${(t.notes||"").replace(/"/g,"'")}"`
+      ].join(","))
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `usag_targets_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
   };
 
-  const stats = useMemo(() => ({
+  const stats = {
     total: targets.length,
     new: targets.filter(t => t.status === "new").length,
     contacted: targets.filter(t => t.status === "contacted").length,
     converted: targets.filter(t => t.status === "converted").length,
-  }), [targets]);
-
-  const SortIcon = ({ col }: { col: keyof MarketingTarget }) =>
-    sortKey === col ? (sortDir === "asc" ? <ChevronUp className="inline w-3 h-3" /> : <ChevronDown className="inline w-3 h-3" />) : null;
-
-  if (loading) return (
-    <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin" /></div>
-  );
+  };
 
   // ── QUEUE MODE ──────────────────────────────────────────────────────────────
   if (mode === "queue") {
-    const target = queueTargets[queueIndex];
-    const progress = `${queueIndex + 1} / ${queueTargets.length}`;
+    if (queueDone) {
+      return (
+        <div className="text-center py-12 space-y-4">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
+          <h2 className="text-2xl font-bold">Campaign Complete!</h2>
+          {emailResults && (
+            <p className="text-muted-foreground">Emails sent: {emailResults.sent} · Failed: {emailResults.failed}</p>
+          )}
+          <p className="text-muted-foreground">Social outreach logged: {socialQueue.length}</p>
+          <Button onClick={() => { setMode("list"); setSelected(new Set()); }}>Back to List</Button>
+        </div>
+      );
+    }
+
+    const target = socialQueue[queueIndex];
+    const progress = `${queueIndex + 1} / ${socialQueue.length}`;
+
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-3xl mx-auto">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Outreach Queue — {progress}</h3>
-          <Button size="sm" variant="ghost" onClick={() => setMode("list")}>Exit Queue</Button>
+          <div>
+            <h2 className="text-xl font-bold">Manual Outreach Queue</h2>
+            <p className="text-sm text-muted-foreground">{progress} accounts · Open link, paste message, log it</p>
+          </div>
+          <Button variant="ghost" onClick={() => setMode("list")}><X className="w-4 h-4 mr-1" /> Exit</Button>
         </div>
 
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div>
-              <div className="flex items-center gap-2 text-xl font-bold">
-                <span>{TYPE_ICONS[target.type] || "•"}</span>
-                <span>{target.name}</span>
-              </div>
+        {emailResults && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-green-600" />
+            Emails sent to {emailResults.sent} recipients. Now working through social accounts.
+          </div>
+        )}
+
+        <div className="w-full bg-muted rounded-full h-2">
+          <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${((queueIndex+1)/socialQueue.length)*100}%` }} />
+        </div>
+
+        <div className="border rounded-lg p-6 space-y-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold">{TYPE_ICONS[target.type] || "•"} {target.name}</h3>
               {(target.city || target.state) && (
-                <p className="text-sm text-muted-foreground">
-                  {[target.city, target.state].filter(Boolean).join(", ")}
-                </p>
+                <p className="text-sm text-muted-foreground">{[target.city, target.state].filter(Boolean).join(", ")}</p>
               )}
               {target.member_count && (
-                <p className="text-sm text-muted-foreground">
-                  {target.member_count.toLocaleString()} followers/members
-                </p>
+                <p className="text-sm text-muted-foreground">{target.member_count.toLocaleString()} members/followers</p>
               )}
-              {target.url && (
-                <a href={target.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-1">
-                  Open <ExternalLink className="w-3 h-3" />
-                </a>
-              )}
+              {target.notes && <p className="text-xs text-muted-foreground mt-1">{target.notes}</p>}
             </div>
+            {target.url && (
+              <a href={target.url} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="sm"><ExternalLink className="w-3 h-3 mr-1" /> Open</Button>
+              </a>
+            )}
+          </div>
 
-            {target.notes && <p className="text-sm text-muted-foreground bg-muted p-3 rounded-md">{target.notes}</p>}
+          <pre className="whitespace-pre-wrap text-sm bg-muted/40 rounded p-3 border">{campaignMessage}</pre>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Message</label>
-              <div className="flex gap-2 flex-wrap">
-                {CONTENT_TEMPLATES.map(tpl => (
-                  <Button
-                    key={tpl.id}
-                    size="sm"
-                    variant={contactTemplate === tpl.id ? "default" : "outline"}
-                    onClick={() => applyTemplate(tpl.id)}
-                    className="text-xs"
-                  >
-                    {tpl.label}
-                  </Button>
-                ))}
-              </div>
-              <Textarea
-                value={contactMessage}
-                onChange={e => setContactMessage(e.target.value)}
-                rows={4}
-                placeholder="Message you sent / will send..."
-                className="text-sm"
-              />
-            </div>
+          <div className="flex flex-wrap gap-2 items-center">
+            <Select value={campaignChannel} onValueChange={setCampaignChannel}>
+              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dm">DM</SelectItem>
+                <SelectItem value="comment">Comment</SelectItem>
+                <SelectItem value="in_person">In Person</SelectItem>
+                <SelectItem value="phone">Phone</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={() => logAndAdvance(target)}>
+              <CheckCircle className="w-4 h-4 mr-1" /> Done — Log &amp; Next
+            </Button>
+            <Button variant="ghost" onClick={() => queueIndex + 1 >= socialQueue.length ? setQueueDone(true) : setQueueIndex(i => i + 1)}>
+              Skip
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="flex items-center gap-3">
-              <Select value={contactChannel} onValueChange={setContactChannel}>
-                <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dm">DM</SelectItem>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="phone">Phone</SelectItem>
-                  <SelectItem value="in_person">In Person</SelectItem>
-                  <SelectItem value="comment">Comment</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={() => logQueueTarget(target)} disabled={submitting} className="flex-1">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                Log &amp; Next
+  // ── CAMPAIGN COMPOSE MODE ──────────────────────────────────────────────────
+  if (mode === "campaign") {
+    return (
+      <div className="space-y-4 max-w-3xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold flex items-center gap-2"><Megaphone className="w-5 h-5" /> Campaign</h2>
+            <p className="text-sm text-muted-foreground">
+              {selected.size} targets selected ·{" "}
+              {emailTargets.length > 0 && <span>{emailTargets.length} email{emailTargets.length > 1 ? "s" : ""} </span>}
+              {socialTargets.length > 0 && <span>+ {socialTargets.length} manual outreach</span>}
+            </p>
+          </div>
+          <Button variant="ghost" onClick={() => setMode("list")}><X className="w-4 h-4 mr-1" /> Cancel</Button>
+        </div>
+
+        <div className="border rounded-lg p-3 max-h-32 overflow-y-auto">
+          <div className="flex flex-wrap gap-1">
+            {selectedTargets.map(t => (
+              <span key={t.id} className="text-xs bg-muted px-2 py-1 rounded flex items-center gap-1">
+                {TYPE_ICONS[t.type] || "•"} {t.name}
+                {t.email && <Mail className="w-3 h-3 text-green-600" />}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium">Template</label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {TEMPLATES.map(tpl => (
+              <Button
+                key={tpl.id}
+                size="sm"
+                variant={campaignTemplate === tpl.id ? "default" : "outline"}
+                onClick={() => applyTemplate(tpl.id)}
+                className="text-xs"
+              >
+                {tpl.label}
               </Button>
-              <Button variant="ghost" onClick={skipQueue}>Skip</Button>
-            </div>
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
+
+        {emailTargets.length > 0 && (
+          <div>
+            <label className="text-sm font-medium">Email Subject</label>
+            <Input
+              value={campaignSubject}
+              onChange={e => setCampaignSubject(e.target.value)}
+              placeholder="Subject line for email recipients..."
+              className="mt-1"
+            />
+          </div>
+        )}
+
+        <div>
+          <label className="text-sm font-medium">Message</label>
+          <Textarea
+            value={campaignMessage}
+            onChange={e => setCampaignMessage(e.target.value)}
+            rows={7}
+            placeholder="Write your message..."
+            className="mt-1"
+          />
+        </div>
+
+        <Button onClick={launchCampaign} disabled={sending || !campaignMessage.trim()} className="w-full" size="lg">
+          {sending
+            ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+            : <><Send className="w-4 h-4 mr-2" />
+                Launch —
+                {emailTargets.length > 0 && ` Send ${emailTargets.length} email${emailTargets.length > 1 ? "s" : ""}`}
+                {socialTargets.length > 0 && ` + ${socialTargets.length} manual`}
+              </>
+          }
+        </Button>
       </div>
     );
   }
 
   // ── LIST MODE ───────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6">
-          <p className="text-3xl font-bold">{stats.total}</p>
-          <p className="text-sm text-muted-foreground">Total Targets</p>
-        </CardContent></Card>
-        <Card><CardContent className="pt-6">
-          <p className="text-3xl font-bold text-gray-600">{stats.new}</p>
-          <p className="text-sm text-muted-foreground">Not Yet Contacted</p>
-        </CardContent></Card>
-        <Card><CardContent className="pt-6">
-          <p className="text-3xl font-bold text-blue-600">{stats.contacted}</p>
-          <p className="text-sm text-muted-foreground">Contacted</p>
-        </CardContent></Card>
-        <Card><CardContent className="pt-6">
-          <p className="text-3xl font-bold text-green-600">{stats.converted}</p>
-          <p className="text-sm text-muted-foreground">Converted</p>
-        </CardContent></Card>
+    <div className="space-y-4">
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: "Total Targets", value: stats.total, color: "" },
+          { label: "Not Contacted", value: stats.new, color: "text-blue-600" },
+          { label: "Contacted", value: stats.contacted, color: "text-yellow-600" },
+          { label: "Converted", value: stats.converted, color: "text-green-600" },
+        ].map(s => (
+          <div key={s.label} className="border rounded-lg p-4">
+            <div className={`text-2xl font-bold ${s.color}`}>{s.value}</div>
+            <div className="text-sm text-muted-foreground">{s.label}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Controls */}
       <div className="flex flex-wrap gap-2 items-center">
-        <Input
-          placeholder="Search by name..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-48"
-        />
-        <Select value={stateFilter} onValueChange={setStateFilter}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+        <Input placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} className="w-44" />
+        <Select value={filterState} onValueChange={setFilterState}>
+          <SelectTrigger className="w-36"><SelectValue placeholder="All Regions" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All States</SelectItem>
+            <SelectItem value="all">All Regions</SelectItem>
+            {regions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
             {states.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+        <Select value={filterType} onValueChange={setFilterType}>
+          <SelectTrigger className="w-32"><SelectValue placeholder="All Types" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="gym">🥋 Gym</SelectItem>
-            <SelectItem value="facebook_group">👥 FB Group</SelectItem>
-            <SelectItem value="facebook_page">📄 FB Page</SelectItem>
-            <SelectItem value="instagram">📸 Instagram</SelectItem>
-            <SelectItem value="tiktok">🎵 TikTok</SelectItem>
-            <SelectItem value="producer_prospect">🏟 Producer</SelectItem>
+            <SelectItem value="gym">Gym</SelectItem>
+            <SelectItem value="facebook_group">FB Group</SelectItem>
+            <SelectItem value="facebook_page">FB Page</SelectItem>
+            <SelectItem value="instagram">Instagram</SelectItem>
+            <SelectItem value="producer_prospect">Producer</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-32"><SelectValue placeholder="All Status" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="new">New</SelectItem>
             <SelectItem value="contacted">Contacted</SelectItem>
             <SelectItem value="responded">Responded</SelectItem>
             <SelectItem value="converted">Converted</SelectItem>
-            <SelectItem value="not_interested">Not Interested</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" size="sm" onClick={fetchTargets}>
-          <RefreshCw className="w-4 h-4 mr-2" /> Refresh
-        </Button>
+        <Button size="sm" variant="ghost" onClick={fetchTargets}><RefreshCw className="w-3 h-3 mr-1" />Refresh</Button>
         <div className="ml-auto flex gap-2">
-          <Button size="sm" variant="outline" onClick={exportCSV}>
-            <Download className="w-4 h-4 mr-2" /> Export CSV
-          </Button>
-          <Button size="sm" variant="outline" onClick={startQueue}>
-            <ListChecks className="w-4 h-4 mr-2" /> Outreach Queue
-          </Button>
+          <Button size="sm" variant="outline" onClick={exportCSV}><Download className="w-3 h-3 mr-1" />CSV</Button>
           {selected.size > 0 && (
-            <Button size="sm" onClick={() => setShowContactDialog(true)}>
-              <Send className="w-4 h-4 mr-2" /> Log Outreach ({selected.size})
+            <Button size="sm" onClick={startCampaign} className="bg-primary text-primary-foreground">
+              <Megaphone className="w-3 h-3 mr-1" /> Campaign ({selected.size})
             </Button>
           )}
         </div>
       </div>
 
-      {/* Table */}
-      <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-10">
-                <button onClick={toggleAll} className="flex items-center">
-                  {selected.size === filtered.length && filtered.length > 0
-                    ? <CheckSquare className="w-4 h-4 text-primary" />
-                    : <Square className="w-4 h-4 text-muted-foreground" />}
-                </button>
-              </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("name")}>Name <SortIcon col="name" /></TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("city")}>Location <SortIcon col="city" /></TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("member_count")}>Followers <SortIcon col="member_count" /></TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort("status")}>Status <SortIcon col="status" /></TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map(t => (
-              <TableRow key={t.id} className={selected.has(t.id) ? "bg-blue-50/50" : ""}>
-                <TableCell>
-                  <button onClick={() => toggleSelect(t.id)} className="flex items-center">
-                    {selected.has(t.id)
+      {loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+      ) : (
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50">
+              <tr>
+                <th className="w-10 px-3 py-2 text-left">
+                  <button onClick={toggleAll}>
+                    {selected.size === filtered.length && filtered.length > 0
                       ? <CheckSquare className="w-4 h-4 text-primary" />
                       : <Square className="w-4 h-4 text-muted-foreground" />}
                   </button>
-                </TableCell>
-                <TableCell>
-                  {t.url ? (
-                    <a href={t.url} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
-                      {t.name} <ExternalLink className="w-3 h-3" />
-                    </a>
-                  ) : <span>{t.name}</span>}
-                  {t.notes && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{t.notes}</p>}
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {TYPE_ICONS[t.type] || "•"} {TYPE_LABELS[t.type] || t.type}
-                </TableCell>
-                <TableCell className="text-sm">
-                  {[t.city, t.state].filter(Boolean).join(", ") || <span className="text-muted-foreground">{t.region || "National"}</span>}
-                </TableCell>
-                <TableCell>{t.member_count ? t.member_count.toLocaleString() : "—"}</TableCell>
-                <TableCell>
-                  <Badge className={STATUS_STYLES[t.status] || ""} variant="secondary">
-                    {t.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    {t.status === "new" && (
-                      <Button size="sm" variant="outline" onClick={() => { setSelected(new Set([t.id])); setShowContactDialog(true); }}>
-                        Contacted
-                      </Button>
-                    )}
+                </th>
+                <th className="px-3 py-2 text-left font-medium">Name</th>
+                <th className="px-3 py-2 text-left font-medium">Type</th>
+                <th className="px-3 py-2 text-left font-medium">Location</th>
+                <th className="px-3 py-2 text-left font-medium">Reach</th>
+                <th className="px-3 py-2 text-left font-medium">Status</th>
+                <th className="px-3 py-2 text-left font-medium">Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((t, i) => (
+                <tr key={t.id} className={`border-t ${i % 2 ? "bg-muted/20" : ""} ${selected.has(t.id) ? "bg-blue-50" : ""}`}>
+                  <td className="px-3 py-2">
+                    <button onClick={() => toggleSelect(t.id)}>
+                      {selected.has(t.id)
+                        ? <CheckSquare className="w-4 h-4 text-primary" />
+                        : <Square className="w-4 h-4 text-muted-foreground" />}
+                    </button>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="font-medium">{t.name}</div>
+                    {t.email && <div className="text-xs text-green-600 flex items-center gap-0.5"><Mail className="w-2.5 h-2.5" /> {t.email}</div>}
+                    {t.notes && <div className="text-xs text-muted-foreground truncate max-w-xs">{t.notes}</div>}
+                  </td>
+                  <td className="px-3 py-2">{TYPE_ICONS[t.type] || "•"} {t.type?.replace(/_/g," ")}</td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {t.region === "National" || !t.city ? t.region || "—" : `${t.city}, ${t.state}`}
+                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">
+                    {t.member_count ? t.member_count.toLocaleString() : "—"}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLORS[t.status] || "bg-gray-100"}`}>
+                      {t.status}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">
                     {t.url && (
-                      <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(t.url!); toast.success("URL copied"); }}>
-                        <Copy className="w-3 h-3" />
-                      </Button>
+                      <a href={t.url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" variant="ghost" className="h-7 px-2"><ExternalLink className="w-3 h-3" /></Button>
+                      </a>
                     )}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                  No targets match your filters
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-        <div className="px-4 py-2 border-t text-xs text-muted-foreground bg-muted/30 flex justify-between">
-          <span>Showing {filtered.length} of {targets.length}</span>
-          {selected.size > 0 && <span>{selected.size} selected</span>}
-        </div>
-      </Card>
-
-      {/* Bulk Contact Dialog */}
-      <Dialog open={showContactDialog} onOpenChange={setShowContactDialog}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Log Outreach — {selected.size} target{selected.size > 1 ? "s" : ""}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="flex gap-2 flex-wrap">
-              {CONTENT_TEMPLATES.map(tpl => (
-                <Button
-                  key={tpl.id}
-                  size="sm"
-                  variant={contactTemplate === tpl.id ? "default" : "outline"}
-                  onClick={() => applyTemplate(tpl.id)}
-                  className="text-xs"
-                >
-                  {tpl.label}
-                </Button>
+                  </td>
+                </tr>
               ))}
-            </div>
-            <Textarea
-              value={contactMessage}
-              onChange={e => setContactMessage(e.target.value)}
-              rows={5}
-              placeholder="Paste or type the message you sent..."
-            />
-            <Select value={contactChannel} onValueChange={setContactChannel}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dm">DM (Instagram / Facebook)</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="phone">Phone / Text</SelectItem>
-                <SelectItem value="in_person">In Person</SelectItem>
-                <SelectItem value="comment">Comment / Post</SelectItem>
-              </SelectContent>
-            </Select>
+            </tbody>
+          </table>
+          <div className="px-4 py-2 border-t text-xs text-muted-foreground bg-muted/30">
+            Showing {filtered.length} of {targets.length}
+            {selected.size > 0 && ` · ${selected.size} selected`}
           </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setShowContactDialog(false)}>Cancel</Button>
-            <Button onClick={handleBulkContact} disabled={submitting}>
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-              Log Outreach
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </div>
   );
 };
 
-export default MarketingPanel;
+export const MarketingPanel = MarketingOps;
+export default MarketingOps;
