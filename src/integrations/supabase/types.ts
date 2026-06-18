@@ -376,63 +376,7 @@ export type Database = {
       }
     }
     Views: {
-      press_releases_public: {
-        Row: {
-          body_html: string | null
-          canonical_url: string | null
-          category: string | null
-          created_at: string | null
-          id: string | null
-          meta_description: string | null
-          meta_title: string | null
-          og_image_url: string | null
-          publish_date: string | null
-          robots_index: boolean | null
-          slug: string | null
-          status: Database["public"]["Enums"]["press_release_status"] | null
-          summary: string | null
-          tags: string[] | null
-          title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          body_html?: string | null
-          canonical_url?: string | null
-          category?: string | null
-          created_at?: string | null
-          id?: string | null
-          meta_description?: string | null
-          meta_title?: string | null
-          og_image_url?: string | null
-          publish_date?: string | null
-          robots_index?: boolean | null
-          slug?: string | null
-          status?: Database["public"]["Enums"]["press_release_status"] | null
-          summary?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          body_html?: string | null
-          canonical_url?: string | null
-          category?: string | null
-          created_at?: string | null
-          id?: string | null
-          meta_description?: string | null
-          meta_title?: string | null
-          og_image_url?: string | null
-          publish_date?: string | null
-          robots_index?: boolean | null
-          slug?: string | null
-          status?: Database["public"]["Enums"]["press_release_status"] | null
-          summary?: string | null
-          tags?: string[] | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {
