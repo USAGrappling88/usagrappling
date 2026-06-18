@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Send, Bot, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const TELEGRAM_BOT_TOKEN = "8628677571:AAHEHEjiWYY2TnroCo9CC8xRQPfzun7lyts";
 const STORED_CHAT_ID_KEY = "hermes_chat_id";
 
 interface Message {
@@ -37,19 +37,19 @@ export const HermesPanel = () => {
     setLoading(true);
 
     try {
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, text }),
+      const { error: sendErr } = await supabase.functions.invoke("hermes-telegram", {
+        body: { action: "sendMessage", chat_id: chatId, text },
       });
+      if (sendErr) throw sendErr;
 
       await new Promise(r => setTimeout(r, 4000));
-      const updatesRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?limit=5&offset=-5`);
-      const updates = await updatesRes.json();
-      const botReplies = updates.result
-        ?.filter((u: any) => u.message?.from?.is_bot && u.message?.text)
-        ?.map((u: any) => u.message.text) || [];
 
+      const { data: updates, error: updErr } = await supabase.functions.invoke("hermes-telegram", {
+        body: { action: "getUpdates" },
+      });
+      if (updErr) throw updErr;
+
+      const botReplies: string[] = updates?.replies || [];
       if (botReplies.length > 0) {
         setMessages(prev => [...prev, { role: "hermes", text: botReplies[botReplies.length - 1], time: new Date().toLocaleTimeString() }]);
       } else {
