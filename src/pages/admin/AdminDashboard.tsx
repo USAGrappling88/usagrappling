@@ -21,6 +21,15 @@ const AdminDashboard = () => {
   const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("kanban");
 
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail === "string") setActiveTab(detail);
+    };
+    window.addEventListener("admin:navigate-tab", handler);
+    return () => window.removeEventListener("admin:navigate-tab", handler);
+  }, []);
+
   if (authLoading) {
     return (
       <Layout>
