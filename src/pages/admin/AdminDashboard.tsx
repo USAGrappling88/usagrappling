@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
@@ -14,11 +14,21 @@ import { MarketingPanel } from "./MarketingOps";
 import { HermesPanel } from "./HermesOps";
 import { KanbanPanel } from "./KanbanOps";
 import { ComposePanel } from "./ComposeOps";
+import { ContentReviewPanel } from "./ContentReviewOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("kanban");
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (typeof detail === "string") setActiveTab(detail);
+    };
+    window.addEventListener("admin:navigate-tab", handler);
+    return () => window.removeEventListener("admin:navigate-tab", handler);
+  }, []);
 
   if (authLoading) {
     return (
@@ -65,6 +75,9 @@ const AdminDashboard = () => {
             <TabsTrigger value="kanban" className="flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" /> Kanban
             </TabsTrigger>
+            <TabsTrigger value="content-review" className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4" /> Content Review
+            </TabsTrigger>
             <TabsTrigger value="press" className="flex items-center gap-2">
               <FileText className="w-4 h-4" /> Press
             </TabsTrigger>
@@ -94,6 +107,7 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="kanban"><KanbanPanel /></TabsContent>
+          <TabsContent value="content-review"><ContentReviewPanel /></TabsContent>
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
