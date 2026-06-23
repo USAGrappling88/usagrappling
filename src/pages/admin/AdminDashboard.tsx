@@ -75,6 +75,9 @@ const AdminDashboard = () => {
             <TabsTrigger value="kanban" className="flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" /> Kanban
             </TabsTrigger>
+            <TabsTrigger value="content-review" className="flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4" /> Content Review
+            </TabsTrigger>
             <TabsTrigger value="press" className="flex items-center gap-2">
               <FileText className="w-4 h-4" /> Press
             </TabsTrigger>
