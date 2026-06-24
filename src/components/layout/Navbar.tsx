@@ -8,6 +8,7 @@ import usagLogo from "@/assets/usag-logo.png";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/team-usa", label: "Team USA" },
+  { href: "/events", label: "Events" },
   { href: "/collegiate", label: "Collegiate Programs" },
   { href: "/coaches-officials", label: "Coaches/Officials" },
   { href: "/faq", label: "FAQ" },
