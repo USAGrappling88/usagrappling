@@ -97,16 +97,6 @@ const Events = () => {
             <p className="text-primary-foreground/90 text-lg md:text-xl mb-8">
               Find USA Grappling sanctioned competitions near you.
             </p>
-            <Button 
-              asChild 
-              size="lg" 
-              className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-            >
-              <a href={EVENTS_URL} target="_blank" rel="noopener noreferrer">
-                View All Events on Smoothcomp
-                <ExternalLink className="w-4 h-4 ml-2" />
-              </a>
-            </Button>
           </div>
         </div>
       </section>
