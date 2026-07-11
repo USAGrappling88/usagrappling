@@ -45,7 +45,7 @@ export function FundraisingHero() {
           </h2>
 
           <p className="text-lg md:text-xl text-white/85 mb-10 max-w-2xl mx-auto">
-            Our youth athletes qualified for Team USA and are headed to the World Championships in Kazakhstan and Japan. Every dollar gets them there.
+            Our athletes qualified for Team USA and are headed to the World Championships in Kazakhstan and Japan. Every dollar gets them there.
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-10">
