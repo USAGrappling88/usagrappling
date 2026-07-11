@@ -1,4 +1,5 @@
 import { Layout } from "@/components/layout/Layout";
+import { FundraisingHero } from "@/components/home/FundraisingHero";
 import { HeroSection } from "@/components/home/HeroSection";
 import { BenefitsSection } from "@/components/home/BenefitsSection";
 import { SecondaryHeroSection } from "@/components/home/SecondaryHeroSection";
@@ -14,6 +15,7 @@ import { InstagramFeedSection } from "@/components/home/InstagramFeedSection";
 const Index = () => {
   return (
     <Layout>
+      <FundraisingHero />
       <HeroSection />
       <BenefitsSection />
       <NewsSection />
