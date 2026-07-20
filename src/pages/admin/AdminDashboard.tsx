@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useOpsAccess } from "@/hooks/useOpsAccess";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck, KeyRound } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
@@ -15,10 +16,13 @@ import { HermesPanel } from "./HermesOps";
 import { KanbanPanel } from "./KanbanOps";
 import { ComposePanel } from "./ComposeOps";
 import { ContentReviewPanel } from "./ContentReviewOps";
+import { UsersAccessPanel } from "./UsersAccessOps";
+import { EventStaffView } from "./EventStaffView";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
+  const { role: opsRole, displayName: opsName, loading: opsLoading } = useOpsAccess(user?.email);
   const [activeTab, setActiveTab] = useState("kanban");
 
   useEffect(() => {
@@ -30,7 +34,7 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("admin:navigate-tab", handler);
   }, []);
 
-  if (authLoading) {
+  if (authLoading || opsLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -45,7 +49,24 @@ const AdminDashboard = () => {
     return null;
   }
 
-  if (!isAdmin) {
+  // Event Staff: scoped experience — no site-admin required.
+  if (opsRole === "event_staff") {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-display font-bold text-foreground">Event Staff</h1>
+            <Button variant="outline" size="sm" onClick={() => signOut().then(() => navigate("/"))}>
+              <LogOut className="w-4 h-4 mr-2" /> Sign Out
+            </Button>
+          </div>
+          <EventStaffView displayName={opsName} email={user.email ?? ""} />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAdmin && opsRole !== "admin" && opsRole !== "travel_admin") {
     return (
       <Layout>
         <div className="max-w-md mx-auto py-20 px-4 text-center">
@@ -60,6 +81,8 @@ const AdminDashboard = () => {
     );
   }
 
+  const canManageAccess = isSuperAdmin || opsRole === "admin";
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
@@ -71,7 +94,7 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
+          <TabsList className="mb-6 flex-wrap h-auto">
             <TabsTrigger value="kanban" className="flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" /> Kanban
             </TabsTrigger>
@@ -90,6 +113,11 @@ const AdminDashboard = () => {
             {isSuperAdmin && (
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <UserCog className="w-4 h-4" /> Users
+              </TabsTrigger>
+            )}
+            {canManageAccess && (
+              <TabsTrigger value="access" className="flex items-center gap-2">
+                <KeyRound className="w-4 h-4" /> Users &amp; Access
               </TabsTrigger>
             )}
             <TabsTrigger value="world-team" className="flex items-center gap-2">
@@ -112,6 +140,7 @@ const AdminDashboard = () => {
           <TabsContent value="events"><EventPanel /></TabsContent>
           <TabsContent value="staff"><StaffPanel /></TabsContent>
           {isSuperAdmin && <TabsContent value="users"><UserManagementPanel /></TabsContent>}
+          {canManageAccess && <TabsContent value="access"><UsersAccessPanel /></TabsContent>}
           <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
           <TabsContent value="marketing"><MarketingPanel /></TabsContent>
           <TabsContent value="compose"><ComposePanel /></TabsContent>
