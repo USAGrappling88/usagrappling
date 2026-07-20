@@ -5,7 +5,7 @@ import { useOpsAccess } from "@/hooks/useOpsAccess";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck, KeyRound } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck, KeyRound, Command } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
@@ -17,7 +17,7 @@ import { KanbanPanel } from "./KanbanOps";
 import { ComposePanel } from "./ComposeOps";
 import { ContentReviewPanel } from "./ContentReviewOps";
 import { UsersAccessPanel } from "./UsersAccessOps";
-import { EventStaffView } from "./EventStaffView";
+import { EventCommandPanel } from "./EventCommandOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -60,7 +60,8 @@ const AdminDashboard = () => {
               <LogOut className="w-4 h-4 mr-2" /> Sign Out
             </Button>
           </div>
-          <EventStaffView displayName={opsName} email={user.email ?? ""} />
+          <EventCommandPanel />
+          {opsName ? <p className="text-xs text-muted-foreground mt-4">Signed in as {opsName}</p> : null}
         </div>
       </Layout>
     );
@@ -97,6 +98,9 @@ const AdminDashboard = () => {
           <TabsList className="mb-6 flex-wrap h-auto">
             <TabsTrigger value="kanban" className="flex items-center gap-2">
               <LayoutDashboard className="w-4 h-4" /> Kanban
+            </TabsTrigger>
+            <TabsTrigger value="event-command" className="flex items-center gap-2">
+              <Command className="w-4 h-4" /> Event Command
             </TabsTrigger>
             <TabsTrigger value="content-review" className="flex items-center gap-2">
               <ClipboardCheck className="w-4 h-4" /> Content Review
@@ -135,6 +139,7 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="kanban"><KanbanPanel /></TabsContent>
+          <TabsContent value="event-command"><EventCommandPanel /></TabsContent>
           <TabsContent value="content-review"><ContentReviewPanel /></TabsContent>
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
