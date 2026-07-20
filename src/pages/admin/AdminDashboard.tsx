@@ -139,6 +139,7 @@ const AdminDashboard = () => {
           </TabsList>
 
           <TabsContent value="kanban"><KanbanPanel /></TabsContent>
+          <TabsContent value="event-command"><EventCommandPanel /></TabsContent>
           <TabsContent value="content-review"><ContentReviewPanel /></TabsContent>
           <TabsContent value="press"><PressPanel /></TabsContent>
           <TabsContent value="events"><EventPanel /></TabsContent>
