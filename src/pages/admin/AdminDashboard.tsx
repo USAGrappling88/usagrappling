@@ -5,7 +5,7 @@ import { useOpsAccess } from "@/hooks/useOpsAccess";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck, KeyRound } from "lucide-react";
+import { LogOut, Loader2, ShieldAlert, FileText, Calendar, Users, UserCog, Trophy, Megaphone, MessageSquare, LayoutDashboard, PenSquare, ClipboardCheck, KeyRound, Command } from "lucide-react";
 import { PressPanel } from "./PressOps";
 import { EventPanel } from "./EventOps";
 import { StaffPanel } from "./StaffOps";
@@ -17,7 +17,7 @@ import { KanbanPanel } from "./KanbanOps";
 import { ComposePanel } from "./ComposeOps";
 import { ContentReviewPanel } from "./ContentReviewOps";
 import { UsersAccessPanel } from "./UsersAccessOps";
-import { EventStaffView } from "./EventStaffView";
+import { EventCommandPanel } from "./EventCommandOps";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
