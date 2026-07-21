@@ -1469,6 +1469,7 @@ const EventFormDialog = ({
     mats: "",
     notes: "",
     color: "",
+    tentative: false,
   });
 
   useEffect(() => {
@@ -1485,6 +1486,7 @@ const EventFormDialog = ({
         mats: event?.mats?.toString() ?? "",
         notes: event?.notes ?? "",
         color: event?.color ?? "",
+        tentative: event?.status === "pending",
       });
     }
   }, [open, event]);
@@ -1514,13 +1516,18 @@ const EventFormDialog = ({
         mats: form.mats ? Number(form.mats) : null,
       };
       if (isEdit && event) {
+        // Only touch status if the tentative toggle flipped its meaning.
+        const currentPending = event.status === "pending";
+        if (currentPending && !form.tentative) payload.status = "active";
+        else if (!currentPending && form.tentative && event.status !== "inactive" && event.status !== "cancelled") payload.status = "pending";
         const { error } = await opsSupabase.from("events").update(payload).eq("id", event.id);
         if (error) throw error;
         toast.success("Event updated — task due dates recalculated server-side");
       } else {
+        payload.status = form.tentative ? "pending" : "active";
         const { error } = await opsSupabase.from("events").insert(payload);
         if (error) throw error;
-        toast.success("Event created — tasks generated automatically");
+        toast.success(form.tentative ? "Event saved as tentative — pending approval" : "Event created — tasks generated automatically");
       }
       onOpenChange(false);
       onSaved();
