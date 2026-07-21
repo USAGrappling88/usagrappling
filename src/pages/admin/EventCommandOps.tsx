@@ -712,9 +712,18 @@ const EventDetail = ({
             <div>
               <CardTitle className="text-2xl">{event.name}</CardTitle>
               <div className="text-sm text-muted-foreground flex items-center gap-3 mt-2 flex-wrap">
-                <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" /> {event.event_date}</span>
+                <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" /> {formatEventDates(event.event_date, event.end_date)}</span>
                 <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.city}{event.state ? `, ${event.state}` : ""}</span>
                 {event.style && <span>Style: {event.style}</span>}
+                {(() => {
+                  const c = eventCountdown(event);
+                  if (!c.label) return null;
+                  return c.live ? (
+                    <Badge className="bg-green-600 hover:bg-green-600 text-white">{c.label}</Badge>
+                  ) : (
+                    <span className={c.past ? "" : "font-medium text-foreground"}>{c.label}</span>
+                  );
+                })()}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
