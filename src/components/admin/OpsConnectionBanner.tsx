@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { opsSupabase } from "@/lib/opsSupabase";
 
 interface Props {
   onReconnected?: () => void;
