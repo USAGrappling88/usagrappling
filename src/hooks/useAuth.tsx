@@ -130,7 +130,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await syncAuthState(currentSession);
     });
 
-    return () => subscription.unsubscribe();
+    // Reflect any persisted ops session on load.
+    void opsSupabase.auth.getSession().then(({ data: { session: opsSession } }) => {
+      if (opsSession?.user) {
+        setOpsConnected(true);
+        setOpsError(null);
+      }
+    });
+
+    const { data: opsSub } = opsSupabase.auth.onAuthStateChange((_e, s) => {
+      setOpsConnected(!!s?.user);
+      if (s?.user) setOpsError(null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      opsSub.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
