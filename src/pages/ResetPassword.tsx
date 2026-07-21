@@ -128,6 +128,36 @@ const ResetPassword = () => {
     );
   }
 
+  const onboardingSteps = [
+    'Go to usa-grappling.com/admin and choose Sign In (not Sign Up)',
+    'Use this email and your new password',
+    "You'll see the events you're assigned to, with your team's tasks and deadlines — check tasks off as you complete them",
+    "You'll get automatic email/text reminders for anything due within 3 days or overdue",
+  ];
+
+  const GuidanceBox = () => (
+    <div className="mt-6 rounded-lg border bg-muted/50 p-4 text-sm">
+      <h3 className="mb-3 font-semibold text-foreground">What happens next</h3>
+      <ol className="ml-4 list-decimal space-y-2 text-muted-foreground">
+        {onboardingSteps.map((step, i) => (
+          <li key={i}>{step}</li>
+        ))}
+      </ol>
+    </div>
+  );
+
+  const SignInButton = () => (
+    <Button
+      className="mt-4 w-full"
+      onClick={() => {
+        window.location.href = '/auth?redirect=/admin';
+      }}
+    >
+      Go to Sign In
+      <ArrowRight className="ml-2 h-4 w-4" />
+    </Button>
+  );
+
   return (
     <Layout>
       <div className="min-h-[60vh] flex items-center justify-center py-12 px-4">
@@ -138,44 +168,71 @@ const ResetPassword = () => {
                 <KeyRound className="w-8 h-8 text-primary" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold">Set New Password</CardTitle>
-            <CardDescription>Enter your new password below</CardDescription>
+            <CardTitle className="text-2xl font-bold">Welcome to the USA Grappling Production Team</CardTitle>
+            <CardDescription>
+              Set your password below. You'll use it together with your email address to sign in.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleReset} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="new-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                  />
+            {isSuccess ? (
+              <>
+                <div className="flex flex-col items-center justify-center text-center">
+                  <div className="mb-3 rounded-full bg-green-100 p-3 dark:bg-green-900/30">
+                    <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400" />
+                  </div>
+                  <h2 className="text-lg font-semibold">Password set</h2>
+                  <p className="text-sm text-muted-foreground">Your password has been updated successfully.</p>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    id="confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10"
-                  />
+                <GuidanceBox />
+                <SignInButton />
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Mail className="h-3 w-3" />
+                  Questions? Contact <a href="mailto:blair@usagrappling.com" className="underline hover:text-foreground">blair@usagrappling.com</a>
                 </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Update Password
-              </Button>
-            </form>
+              </>
+            ) : (
+              <>
+                <form onSubmit={handleReset} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="new-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirm-password">Confirm Password</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        id="confirm-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    Update Password
+                  </Button>
+                </form>
+                <GuidanceBox />
+                <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Mail className="h-3 w-3" />
+                  Questions? Contact <a href="mailto:blair@usagrappling.com" className="underline hover:text-foreground">blair@usagrappling.com</a>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
