@@ -337,13 +337,18 @@ const Overview = ({
     [allEvents]
   );
   const events = activeEvents;
+  const activeEventIds = useMemo(() => new Set(activeEvents.map((e) => e.id)), [activeEvents]);
+  const activeTasks = useMemo(
+    () => tasks.filter((t) => activeEventIds.has(t.event_id)),
+    [tasks, activeEventIds]
+  );
   const stats = useMemo(() => {
     const now = startOfToday();
     const weekOut = new Date(now.getTime() + 7 * 86_400_000);
     let overdue = 0,
       dueWeek = 0,
       done = 0;
-    for (const t of tasks) {
+    for (const t of activeTasks) {
       if (t.done) {
         done++;
         continue;
@@ -395,16 +400,16 @@ const Overview = ({
       conflicts: clusters.length,
       conflictClusters: clusters,
     };
-  }, [events, tasks]);
-
-  const urgent = useMemo(() => {
-    return tasks
-      .filter((t) => !t.done && t.due_date)
-      .sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1))
-      .slice(0, 15);
-  }, [tasks]);
+  }, [events, activeTasks]);
 
   const eventById = useMemo(() => new Map(events.map((e) => [e.id, e])), [events]);
+
+  const urgent = useMemo(() => {
+    return activeTasks
+      .filter((t) => !t.done && t.due_date && eventById.has(t.event_id))
+      .sort((a, b) => (a.due_date! < b.due_date! ? -1 : 1))
+      .slice(0, 15);
+  }, [activeTasks, eventById]);
 
   return (
     <div className="space-y-6">
