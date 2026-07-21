@@ -1076,7 +1076,7 @@ const EventFormDialog = ({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Date</Label>
+              <Label>Start date</Label>
               <Input
                 type="date"
                 value={form.event_date}
@@ -1084,14 +1084,23 @@ const EventFormDialog = ({
               />
             </div>
             <div>
-              <Label>Obligation</Label>
-              <Select value={form.obligation} onValueChange={(v) => setForm({ ...form, obligation: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {OBLIGATIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>End date <span className="text-muted-foreground">(optional)</span></Label>
+              <Input
+                type="date"
+                value={form.end_date}
+                min={form.event_date || undefined}
+                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+              />
             </div>
+          </div>
+          <div>
+            <Label>Obligation</Label>
+            <Select value={form.obligation} onValueChange={(v) => setForm({ ...form, obligation: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {OBLIGATIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
