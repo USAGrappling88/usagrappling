@@ -889,4 +889,183 @@ const TeamSection = ({
   );
 };
 
+/* ------------------- Event Form Dialog ------------------- */
+
+const EventFormDialog = ({
+  open,
+  onOpenChange,
+  event,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  event: EventRow | null;
+  onSaved: () => void;
+}) => {
+  const isEdit = !!event;
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    event_date: "",
+    city: "",
+    state: "",
+    style: "TBD",
+    obligation: "Production",
+    expected_competitors: "",
+    mats: "",
+    notes: "",
+    color: "",
+  });
+
+  useEffect(() => {
+    if (open) {
+      setForm({
+        name: event?.name ?? "",
+        event_date: event?.event_date ?? "",
+        city: event?.city ?? "",
+        state: event?.state ?? "",
+        style: event?.style ?? "TBD",
+        obligation: event?.obligation ?? "Production",
+        expected_competitors: event?.expected_competitors?.toString() ?? "",
+        mats: event?.mats?.toString() ?? "",
+        notes: event?.notes ?? "",
+        color: event?.color ?? "",
+      });
+    }
+  }, [open, event]);
+
+  const submit = async () => {
+    if (!form.name.trim() || !form.event_date) {
+      toast.error("Name and date are required");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload: any = {
+        name: form.name.trim(),
+        event_date: form.event_date,
+        city: form.city || null,
+        state: form.state || null,
+        style: form.style || null,
+        obligation: form.obligation || null,
+        notes: form.notes || null,
+        color: form.color || null,
+        expected_competitors: form.expected_competitors ? Number(form.expected_competitors) : null,
+        mats: form.mats ? Number(form.mats) : null,
+      };
+      if (isEdit && event) {
+        const { error } = await opsSupabase.from("events").update(payload).eq("id", event.id);
+        if (error) throw error;
+        toast.success("Event updated — task due dates recalculated server-side");
+      } else {
+        const { error } = await opsSupabase.from("events").insert(payload);
+        if (error) throw error;
+        toast.success("Event created — tasks generated automatically");
+      }
+      onOpenChange(false);
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit Event" : "Add Event"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Name</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={form.event_date}
+                onChange={(e) => setForm({ ...form, event_date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Obligation</Label>
+              <Select value={form.obligation} onValueChange={(v) => setForm({ ...form, obligation: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {OBLIGATIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>City</Label>
+              <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            </div>
+            <div>
+              <Label>State</Label>
+              <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Style</Label>
+            <Select value={form.style} onValueChange={(v) => setForm({ ...form, style: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {EVENT_STYLES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label>Expected Competitors</Label>
+              <Input
+                type="number"
+                value={form.expected_competitors}
+                onChange={(e) => setForm({ ...form, expected_competitors: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Mats</Label>
+              <Input
+                type="number"
+                value={form.mats}
+                onChange={(e) => setForm({ ...form, mats: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Color</Label>
+              <Input
+                type="color"
+                value={form.color || "#1B3A6B"}
+                onChange={(e) => setForm({ ...form, color: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Notes</Label>
+            <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
+          </div>
+          {isEdit && (
+            <p className="text-xs text-muted-foreground">
+              Changing the event date will automatically recompute every task's due date.
+            </p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {isEdit ? "Save Changes" : "Create Event"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export default EventCommandPanel;
