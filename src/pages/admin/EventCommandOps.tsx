@@ -367,8 +367,10 @@ export const EventCommandPanel = () => {
       events={events}
       tasks={tasks}
       isAdmin={isAdmin}
+      isSuperAdmin={isSuperAdmin}
       onOpenEvent={setSelectedEventId}
       onAddEvent={openAdd}
+      onApproveEvent={approveEvent}
     />
   );
 
