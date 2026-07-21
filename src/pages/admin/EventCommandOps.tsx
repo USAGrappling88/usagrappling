@@ -64,6 +64,7 @@ interface EventRow {
   id: string;
   name: string;
   event_date: string;
+  end_date: string | null;
   city: string | null;
   state: string | null;
   style: string | null;
@@ -102,11 +103,56 @@ const startOfToday = () => {
   return d;
 };
 
+const parseDay = (dateStr: string) => {
+  const d = new Date(dateStr + (dateStr.length === 10 ? "T00:00:00" : ""));
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 const daysBetween = (dateStr: string | null) => {
   if (!dateStr) return null;
-  const target = new Date(dateStr + (dateStr.length === 10 ? "T00:00:00" : ""));
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target.getTime() - startOfToday().getTime()) / 86_400_000);
+  return Math.round((parseDay(dateStr).getTime() - startOfToday().getTime()) / 86_400_000);
+};
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fmtDate = (dateStr: string) => {
+  const d = parseDay(dateStr);
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
+const formatEventDates = (start: string, end: string | null | undefined) => {
+  if (!end || end === start) return fmtDate(start);
+  const s = parseDay(start);
+  const e = parseDay(end);
+  if (s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth()) {
+    return `${MONTHS[s.getMonth()]} ${s.getDate()}\u2013${e.getDate()}, ${s.getFullYear()}`;
+  }
+  if (s.getFullYear() === e.getFullYear()) {
+    return `${MONTHS[s.getMonth()]} ${s.getDate()} \u2013 ${MONTHS[e.getMonth()]} ${e.getDate()}, ${s.getFullYear()}`;
+  }
+  return `${fmtDate(start)} \u2013 ${fmtDate(end)}`;
+};
+
+const eventCountdown = (ev: EventRow): { label: string; live: boolean; past: boolean } => {
+  const startDays = daysBetween(ev.event_date);
+  const endDays = daysBetween(ev.end_date ?? ev.event_date);
+  if (startDays === null) return { label: "", live: false, past: false };
+  if (startDays > 0) return { label: `In ${startDays} day${startDays === 1 ? "" : "s"}`, live: false, past: false };
+  if (endDays !== null && endDays < 0) {
+    return { label: `${Math.abs(endDays)} day${Math.abs(endDays) === 1 ? "" : "s"} ago`, live: false, past: true };
+  }
+  // in range (today >= start and today <= end)
+  const totalDays = endDays !== null ? endDays - startDays + 1 : 1;
+  const currentDay = 1 - startDays; // startDays <= 0
+  if (totalDays > 1) return { label: `LIVE \u2014 Day ${currentDay} of ${totalDays}`, live: true, past: false };
+  return { label: "Today", live: true, past: false };
+};
+
+const rangesOverlap = (aStart: string, aEnd: string | null | undefined, bStart: string, bEnd: string | null | undefined) => {
+  const as = parseDay(aStart).getTime();
+  const ae = parseDay(aEnd ?? aStart).getTime();
+  const bs = parseDay(bStart).getTime();
+  const be = parseDay(bEnd ?? bStart).getTime();
+  return as <= be && bs <= ae;
 };
 
 const taskUrgency = (t: TaskRow) => {
@@ -128,7 +174,7 @@ const obligationBadge = (o: string | null) => {
 };
 
 export const EventCommandPanel = () => {
-  const { user, isAdmin: mainIsAdmin } = useAuth();
+  const { user, isAdmin: mainIsAdmin, opsConnected } = useAuth();
   const { role: opsRole } = useOpsAccess(user?.email);
   const isAdmin = mainIsAdmin || opsRole === "admin" || opsRole === "travel_admin";
 
@@ -170,7 +216,7 @@ export const EventCommandPanel = () => {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin]);
+  }, [isAdmin, opsConnected]);
 
   const toggleTask = async (task: TaskRow) => {
     // optimistic
@@ -307,21 +353,47 @@ const Overview = ({
       if (d < now) overdue++;
       else if (d <= weekOut) dueWeek++;
     }
-    // same-day conflicts
-    const byDate = new Map<string, EventRow[]>();
-    events.forEach((e) => {
-      const list = byDate.get(e.event_date) ?? [];
-      list.push(e);
-      byDate.set(e.event_date, list);
-    });
-    const conflictGroups = [...byDate.entries()].filter(([, l]) => l.length > 1);
+    // overlapping-range conflicts
+    const conflictMap = new Map<string, EventRow[]>();
+    for (let i = 0; i < events.length; i++) {
+      for (let j = i + 1; j < events.length; j++) {
+        const a = events[i];
+        const b = events[j];
+        if (rangesOverlap(a.event_date, a.end_date, b.event_date, b.end_date)) {
+          const key = [a.id, b.id].sort().join("|");
+          const existing = conflictMap.get(key) ?? [a, b];
+          conflictMap.set(key, existing);
+        }
+      }
+    }
+    // merge overlapping clusters: build union-find-lite by grouping any events that share overlaps
+    const clusters: EventRow[][] = [];
+    const seen = new Set<string>();
+    for (const e of events) {
+      if (seen.has(e.id)) continue;
+      const cluster: EventRow[] = [e];
+      seen.add(e.id);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const other of events) {
+          if (seen.has(other.id)) continue;
+          if (cluster.some((c) => rangesOverlap(c.event_date, c.end_date, other.event_date, other.end_date))) {
+            cluster.push(other);
+            seen.add(other.id);
+            grew = true;
+          }
+        }
+      }
+      if (cluster.length > 1) clusters.push(cluster);
+    }
     return {
       total: events.length,
       overdue,
       dueWeek,
       done,
-      conflicts: conflictGroups.length,
-      conflictGroups,
+      conflicts: clusters.length,
+      conflictClusters: clusters,
     };
   }, [events, tasks]);
 
@@ -361,17 +433,17 @@ const Overview = ({
       </div>
 
       {/* Conflicts banner */}
-      {stats.conflictGroups.length > 0 && (
+      {stats.conflictClusters.length > 0 && (
         <Card className="border-red-500/40 bg-red-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2 text-red-700">
-              <AlertTriangle className="w-4 h-4" /> Same-day event conflicts
+              <AlertTriangle className="w-4 h-4" /> Overlapping event conflicts
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {stats.conflictGroups.map(([date, list]) => (
-              <div key={date} className="text-sm">
-                <span className="font-semibold mr-2">{date}:</span>
+            {stats.conflictClusters.map((list, idx) => (
+              <div key={idx} className="text-sm">
+                <span className="font-semibold mr-2">Overlap:</span>
                 <span className="inline-flex flex-wrap gap-2">
                   {list.map((e) => (
                     <button
@@ -379,7 +451,7 @@ const Overview = ({
                       onClick={() => onOpenEvent(e.id)}
                       className="rounded-full border border-red-500/40 bg-white px-2 py-0.5 text-xs hover:bg-red-500/10"
                     >
-                      {e.name}
+                      {e.name} <span className="text-muted-foreground">({formatEventDates(e.event_date, e.end_date)})</span>
                     </button>
                   ))}
                 </span>
@@ -446,7 +518,7 @@ const Overview = ({
                 const d = new Date(t.due_date);
                 return d >= now && d <= weekOut;
               }).length;
-              const days = daysBetween(e.event_date);
+              const countdown = eventCountdown(e);
               return (
                 <Card
                   key={e.id}
@@ -458,9 +530,9 @@ const Overview = ({
                       <CardTitle className="text-base">{e.name}</CardTitle>
                       {obligationBadge(e.obligation)}
                     </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1">
+                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1 flex-wrap">
                       <span className="flex items-center gap-1">
-                        <CalendarIcon className="w-3 h-3" /> {e.event_date}
+                        <CalendarIcon className="w-3 h-3" /> {formatEventDates(e.event_date, e.end_date)}
                       </span>
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {e.city}{e.state ? `, ${e.state}` : ""}
@@ -469,7 +541,11 @@ const Overview = ({
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="text-xs">
-                      {days === null ? "" : days < 0 ? `${Math.abs(days)} days ago` : days === 0 ? "Today" : `In ${days} days`}
+                      {countdown.live ? (
+                        <Badge className="bg-green-600 hover:bg-green-600 text-white">{countdown.label}</Badge>
+                      ) : (
+                        <span className={countdown.past ? "text-muted-foreground" : ""}>{countdown.label}</span>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center justify-between text-xs mb-1">
@@ -518,7 +594,7 @@ const Overview = ({
                       <Badge variant="outline" className="capitalize">{e.status}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {e.event_date} · {e.city}{e.state ? `, ${e.state}` : ""}
+                      {formatEventDates(e.event_date, e.end_date)} · {e.city}{e.state ? `, ${e.state}` : ""}
                     </div>
                   </CardHeader>
                 </Card>
@@ -636,9 +712,18 @@ const EventDetail = ({
             <div>
               <CardTitle className="text-2xl">{event.name}</CardTitle>
               <div className="text-sm text-muted-foreground flex items-center gap-3 mt-2 flex-wrap">
-                <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" /> {event.event_date}</span>
+                <span className="flex items-center gap-1"><CalendarIcon className="w-4 h-4" /> {formatEventDates(event.event_date, event.end_date)}</span>
                 <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {event.city}{event.state ? `, ${event.state}` : ""}</span>
                 {event.style && <span>Style: {event.style}</span>}
+                {(() => {
+                  const c = eventCountdown(event);
+                  if (!c.label) return null;
+                  return c.live ? (
+                    <Badge className="bg-green-600 hover:bg-green-600 text-white">{c.label}</Badge>
+                  ) : (
+                    <span className={c.past ? "" : "font-medium text-foreground"}>{c.label}</span>
+                  );
+                })()}
               </div>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -907,6 +992,7 @@ const EventFormDialog = ({
   const [form, setForm] = useState({
     name: "",
     event_date: "",
+    end_date: "",
     city: "",
     state: "",
     style: "TBD",
@@ -922,6 +1008,7 @@ const EventFormDialog = ({
       setForm({
         name: event?.name ?? "",
         event_date: event?.event_date ?? "",
+        end_date: event?.end_date ?? "",
         city: event?.city ?? "",
         state: event?.state ?? "",
         style: event?.style ?? "TBD",
@@ -939,11 +1026,16 @@ const EventFormDialog = ({
       toast.error("Name and date are required");
       return;
     }
+    if (form.end_date && form.end_date < form.event_date) {
+      toast.error("End date must be on or after the start date");
+      return;
+    }
     setSaving(true);
     try {
       const payload: any = {
         name: form.name.trim(),
         event_date: form.event_date,
+        end_date: form.end_date || null,
         city: form.city || null,
         state: form.state || null,
         style: form.style || null,
@@ -984,7 +1076,7 @@ const EventFormDialog = ({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>Date</Label>
+              <Label>Start date</Label>
               <Input
                 type="date"
                 value={form.event_date}
@@ -992,14 +1084,23 @@ const EventFormDialog = ({
               />
             </div>
             <div>
-              <Label>Obligation</Label>
-              <Select value={form.obligation} onValueChange={(v) => setForm({ ...form, obligation: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {OBLIGATIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <Label>End date <span className="text-muted-foreground">(optional)</span></Label>
+              <Input
+                type="date"
+                value={form.end_date}
+                min={form.event_date || undefined}
+                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+              />
             </div>
+          </div>
+          <div>
+            <Label>Obligation</Label>
+            <Select value={form.obligation} onValueChange={(v) => setForm({ ...form, obligation: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {OBLIGATIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>

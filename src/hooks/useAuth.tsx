@@ -9,6 +9,9 @@ interface AuthContextType {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   isLoading: boolean;
+  opsConnected: boolean;
+  opsError: string | null;
+  reconnectOps: (password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -22,9 +25,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [opsConnected, setOpsConnected] = useState(false);
+  const [opsError, setOpsError] = useState<string | null>(null);
   const previousUserIdRef = useRef<string | null>(null);
   const checkedAdminUserIdRef = useRef<string | null>(null);
   const authSyncIdRef = useRef(0);
+
+  const attemptOpsSignIn = async (email: string, password: string) => {
+    try {
+      const opsResult = await opsSupabase.auth.signInWithPassword({ email, password });
+      if (opsResult.error) {
+        console.error('Ops sign-in failed:', opsResult.error.message);
+        setOpsConnected(false);
+        setOpsError(opsResult.error.message);
+        return { error: opsResult.error as Error };
+      }
+      setOpsConnected(true);
+      setOpsError(null);
+      return { error: null };
+    } catch (e: any) {
+      console.error('Ops sign-in threw:', e);
+      setOpsConnected(false);
+      setOpsError(e?.message ?? 'Unknown ops sign-in error');
+      return { error: e as Error };
+    }
+  };
+
+  const reconnectOps = async (password: string) => {
+    const email = user?.email;
+    if (!email) return { error: new Error('Not signed in') };
+    return attemptOpsSignIn(email, password);
+  };
 
   const checkAdminRole = async (userId: string) => {
     const { data, error } = await supabase
@@ -99,7 +130,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await syncAuthState(currentSession);
     });
 
-    return () => subscription.unsubscribe();
+    // Reflect any persisted ops session on load.
+    void opsSupabase.auth.getSession().then(({ data: { session: opsSession } }) => {
+      if (opsSession?.user) {
+        setOpsConnected(true);
+        setOpsError(null);
+      }
+    });
+
+    const { data: opsSub } = opsSupabase.auth.onAuthStateChange((_e, s) => {
+      setOpsConnected(!!s?.user);
+      if (s?.user) setOpsError(null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      opsSub.subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -116,14 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // Mirror auth into the ops Supabase project so ops RLS queries run as this user.
-    try {
-      const opsResult = await opsSupabase.auth.signInWithPassword({ email, password });
-      if (opsResult.error) {
-        console.warn('Ops sign-in failed (user may not exist in ops project):', opsResult.error.message);
-      }
-    } catch (e) {
-      console.warn('Ops sign-in threw:', e);
-    }
+    await attemptOpsSignIn(email, password);
 
     const nextSession = data.session ?? null;
     const nextUser = data.user ?? nextSession?.user ?? null;
@@ -183,12 +223,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setIsAdmin(false);
     setIsSuperAdmin(false);
+    setOpsConnected(false);
+    setOpsError(null);
     checkedAdminUserIdRef.current = null;
     previousUserIdRef.current = null;
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, isSuperAdmin, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isSuperAdmin, isLoading, opsConnected, opsError, reconnectOps, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );

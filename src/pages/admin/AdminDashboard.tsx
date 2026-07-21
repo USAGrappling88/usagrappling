@@ -18,6 +18,7 @@ import { ComposePanel } from "./ComposeOps";
 import { ContentReviewPanel } from "./ContentReviewOps";
 import { UsersAccessPanel } from "./UsersAccessOps";
 import { EventCommandPanel } from "./EventCommandOps";
+import { OpsConnectionBanner } from "@/components/admin/OpsConnectionBanner";
 
 type TabDef = {
   value: string;
@@ -69,6 +70,7 @@ const AdminDashboard = () => {
               <LogOut className="w-4 h-4 mr-2" /> Sign Out
             </Button>
           </div>
+          <OpsConnectionBanner />
           <EventCommandPanel />
           {opsName ? <p className="text-xs text-muted-foreground mt-4">Signed in as {opsName}</p> : null}
         </div>
@@ -126,6 +128,10 @@ const AdminDashboard = () => {
             <LogOut className="w-4 h-4 mr-2" /> Sign Out
           </Button>
         </div>
+
+        <OpsConnectionBanner />
+
+
 
         <Tabs value={effectiveTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6 flex-wrap h-auto">
