@@ -138,6 +138,8 @@ export const EventCommandPanel = () => {
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
 
   const load = async () => {
     setLoading(true);
