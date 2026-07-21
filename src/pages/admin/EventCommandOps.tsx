@@ -518,7 +518,7 @@ const Overview = ({
                 const d = new Date(t.due_date);
                 return d >= now && d <= weekOut;
               }).length;
-              const days = daysBetween(e.event_date);
+              const countdown = eventCountdown(e);
               return (
                 <Card
                   key={e.id}
@@ -530,9 +530,9 @@ const Overview = ({
                       <CardTitle className="text-base">{e.name}</CardTitle>
                       {obligationBadge(e.obligation)}
                     </div>
-                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1">
+                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1 flex-wrap">
                       <span className="flex items-center gap-1">
-                        <CalendarIcon className="w-3 h-3" /> {e.event_date}
+                        <CalendarIcon className="w-3 h-3" /> {formatEventDates(e.event_date, e.end_date)}
                       </span>
                       <span className="flex items-center gap-1">
                         <MapPin className="w-3 h-3" /> {e.city}{e.state ? `, ${e.state}` : ""}
@@ -541,7 +541,11 @@ const Overview = ({
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="text-xs">
-                      {days === null ? "" : days < 0 ? `${Math.abs(days)} days ago` : days === 0 ? "Today" : `In ${days} days`}
+                      {countdown.live ? (
+                        <Badge className="bg-green-600 hover:bg-green-600 text-white">{countdown.label}</Badge>
+                      ) : (
+                        <span className={countdown.past ? "text-muted-foreground" : ""}>{countdown.label}</span>
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center justify-between text-xs mb-1">
