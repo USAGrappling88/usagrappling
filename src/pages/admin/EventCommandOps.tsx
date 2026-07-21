@@ -395,18 +395,26 @@ const Overview = ({
   events: allEvents,
   tasks,
   isAdmin,
+  isSuperAdmin,
   onOpenEvent,
   onAddEvent,
+  onApproveEvent,
 }: {
   events: EventRow[];
   tasks: TaskRow[];
   isAdmin: boolean;
+  isSuperAdmin?: boolean;
   onOpenEvent: (id: string) => void;
   onAddEvent?: () => void;
+  onApproveEvent?: (ev: EventRow) => void;
 }) => {
   const [showArchive, setShowArchive] = useState(false);
   const activeEvents = useMemo(
     () => allEvents.filter((e) => (e.status ?? "active") === "active"),
+    [allEvents]
+  );
+  const pendingEvents = useMemo(
+    () => allEvents.filter((e) => e.status === "pending"),
     [allEvents]
   );
   const archivedEvents = useMemo(
