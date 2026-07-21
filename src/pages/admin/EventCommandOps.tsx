@@ -339,10 +339,13 @@ export const EventCommandPanel = () => {
       allTasks={tasks.filter((t) => t.event_id === selectedEvent.id)}
       assignments={assignments.filter((a) => a.event_id === selectedEvent.id)}
       admins={admins}
+      members={members}
       isAdmin={isAdmin}
       currentEmail={user?.email ?? null}
       onBack={() => setSelectedEventId(null)}
       onToggleTask={toggleTask}
+      onAssigneeChange={updateTaskAssignee}
+      onCreateMember={createMember}
       onReload={load}
       onEdit={() => openEdit(selectedEvent)}
       onDelete={() => deleteEvent(selectedEvent)}
