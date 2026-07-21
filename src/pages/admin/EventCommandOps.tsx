@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -28,9 +36,26 @@ import {
   UserPlus,
   Trash2,
   AlertCircle,
+  Plus,
+  Pencil,
+  Archive,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+
+type EventStatus = "active" | "inactive" | "cancelled";
+const EVENT_STYLES = [
+  "Sport Jiu Jitsu",
+  "Wrestling",
+  "Catch",
+  "Grappling",
+  "College",
+  "College-Catch",
+  "TBD",
+];
+const OBLIGATIONS = ["Production", "Admin"];
 
 type AssignmentRole = "ops" | "brackets" | "officials" | "marketing" | "full";
 const ASSIGNMENT_ROLES: AssignmentRole[] = ["ops", "brackets", "officials", "marketing", "full"];
