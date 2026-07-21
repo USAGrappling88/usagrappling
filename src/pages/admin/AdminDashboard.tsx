@@ -129,6 +129,10 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
+        <OpsConnectionBanner />
+
+
+
         <Tabs value={effectiveTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6 flex-wrap h-auto">
             {visibleTabs.map((t) => {
