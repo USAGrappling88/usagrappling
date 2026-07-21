@@ -576,6 +576,9 @@ const EventDetail = ({
   onBack,
   onToggleTask,
   onReload,
+  onEdit,
+  onDelete,
+  onStatusChange,
 }: {
   event: EventRow;
   allTasks: TaskRow[];
@@ -586,6 +589,9 @@ const EventDetail = ({
   onBack: () => void;
   onToggleTask: (t: TaskRow) => void;
   onReload: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onStatusChange?: (s: EventStatus) => void;
 }) => {
   const [filter, setFilter] = useState<Filter>("all");
 
