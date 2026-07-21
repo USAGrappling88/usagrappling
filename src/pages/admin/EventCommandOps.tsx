@@ -174,7 +174,7 @@ const obligationBadge = (o: string | null) => {
 };
 
 export const EventCommandPanel = () => {
-  const { user, isAdmin: mainIsAdmin } = useAuth();
+  const { user, isAdmin: mainIsAdmin, opsConnected } = useAuth();
   const { role: opsRole } = useOpsAccess(user?.email);
   const isAdmin = mainIsAdmin || opsRole === "admin" || opsRole === "travel_admin";
 
