@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { supabase } from '@/integrations/supabase/client';
 import { opsSupabase } from '@/lib/opsSupabase';
 import { toast } from 'sonner';
-import { Loader2, Lock, KeyRound } from 'lucide-react';
+import { Loader2, Lock, KeyRound, CheckCircle2, ArrowRight, Mail } from 'lucide-react';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
