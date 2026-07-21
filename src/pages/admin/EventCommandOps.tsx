@@ -64,6 +64,7 @@ interface EventRow {
   id: string;
   name: string;
   event_date: string;
+  end_date: string | null;
   city: string | null;
   state: string | null;
   style: string | null;
