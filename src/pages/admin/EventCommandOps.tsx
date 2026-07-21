@@ -336,11 +336,20 @@ const Overview = ({
 
   return (
     <div className="space-y-6">
-      {!isAdmin && (
-        <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-800">
-          You're viewing events assigned to you.
+      <div className="flex justify-between items-center gap-2">
+        <div>
+          {!isAdmin && (
+            <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-800">
+              You're viewing events assigned to you.
+            </div>
+          )}
         </div>
-      )}
+        {isAdmin && onAddEvent && (
+          <Button onClick={onAddEvent} size="sm">
+            <Plus className="w-4 h-4 mr-2" /> Add Event
+          </Button>
+        )}
+      </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
