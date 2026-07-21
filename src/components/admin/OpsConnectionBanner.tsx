@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { opsSupabase } from "@/lib/opsSupabase";
 
 interface Props {
   onReconnected?: () => void;
@@ -23,8 +24,27 @@ export const OpsConnectionBanner = ({ onReconnected }: Props) => {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
 
   if (opsConnected) return null;
+
+  const sendReset = async () => {
+    const email = user?.email;
+    if (!email) {
+      toast.error("Not signed in");
+      return;
+    }
+    setSendingReset(true);
+    const { error } = await opsSupabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password?ops=1`,
+    });
+    setSendingReset(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Password reset email sent to ${email}`);
+  };
 
   const submit = async () => {
     if (!password) {
@@ -77,6 +97,14 @@ export const OpsConnectionBanner = ({ onReconnected }: Props) => {
               autoFocus
             />
           </div>
+          <button
+            type="button"
+            onClick={sendReset}
+            disabled={sendingReset}
+            className="text-xs text-primary hover:underline text-left disabled:opacity-60"
+          >
+            {sendingReset ? "Sending reset email…" : "Forgot ops password?"}
+          </button>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
               Cancel

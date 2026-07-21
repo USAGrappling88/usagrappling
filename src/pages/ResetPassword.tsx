@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { opsSupabase } from '@/lib/opsSupabase';
 import { toast } from 'sonner';
 import { Loader2, Lock, KeyRound } from 'lucide-react';
 
@@ -16,6 +17,7 @@ const ResetPassword = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidSession, setIsValidSession] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
+  const [isOps, setIsOps] = useState(false);
 
   useEffect(() => {
     const establishRecoverySession = async () => {
@@ -27,20 +29,23 @@ const ResetPassword = () => {
         const type = queryParams.get('type') ?? hashParams.get('type');
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
+        const opsFlag = queryParams.get('ops') === '1' || hashParams.get('ops') === '1';
+        setIsOps(opsFlag);
+        const client = opsFlag ? opsSupabase : supabase;
 
         if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error } = await client.auth.exchangeCodeForSession(code);
           if (error) throw error;
           setIsValidSession(!!data.session);
         } else if (type === 'recovery' && accessToken && refreshToken) {
-          const { data, error } = await supabase.auth.setSession({
+          const { data, error } = await client.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           if (error) throw error;
           setIsValidSession(!!data.session);
         } else {
-          const { data, error } = await supabase.auth.getSession();
+          const { data, error } = await client.auth.getSession();
           if (error) throw error;
           setIsValidSession(!!data.session);
         }
@@ -72,11 +77,18 @@ const ResetPassword = () => {
     }
 
     setIsSubmitting(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const client = isOps ? opsSupabase : supabase;
+    const { error } = await client.auth.updateUser({ password });
     setIsSubmitting(false);
 
     if (error) {
       toast.error(error.message);
+      return;
+    }
+
+    if (isOps) {
+      toast.success('Ops password updated. Reconnecting…');
+      window.location.href = '/admin';
       return;
     }
 
