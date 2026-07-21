@@ -109,12 +109,19 @@ export const ComposePanel = () => {
       setUploadPct(100);
       toast.success("Media uploaded");
     } catch (err: any) {
-      toast.error(`Upload failed: ${err.message || err}`);
-      setUploadPct(0);
-    } finally {
       clearInterval(timer);
+      setUploadPct(0);
       setUploading(false);
+      const detail =
+        err?.error?.message ||
+        err?.message ||
+        err?.error ||
+        (typeof err === "string" ? err : JSON.stringify(err));
+      toast.error(`Upload failed: ${detail}`);
+      return;
     }
+    clearInterval(timer);
+    setUploading(false);
   };
 
   const clearMedia = () => {
@@ -364,6 +371,9 @@ export const ComposePanel = () => {
               <div className="text-sm font-medium">Upload media</div>
               <div className="text-xs text-muted-foreground">JPG, PNG, MP4, or MOV · up to 200 MB</div>
             </button>
+            <p className="text-xs text-amber-600 dark:text-amber-500">
+              Videos must be under 50 MB — export at 1080p for social.
+            </p>
             <button
               type="button"
               onClick={() => setShowUrlInput((s) => !s)}
