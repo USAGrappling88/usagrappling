@@ -594,7 +594,7 @@ const Overview = ({
                       <Badge variant="outline" className="capitalize">{e.status}</Badge>
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      {e.event_date} · {e.city}{e.state ? `, ${e.state}` : ""}
+                      {formatEventDates(e.event_date, e.end_date)} · {e.city}{e.state ? `, ${e.state}` : ""}
                     </div>
                   </CardHeader>
                 </Card>
