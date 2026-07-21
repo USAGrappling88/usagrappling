@@ -334,6 +334,16 @@ export const EventCommandPanel = () => {
     load();
   };
 
+  const approveEvent = async (ev: EventRow) => {
+    const { error } = await opsSupabase.from("events").update({ status: "active" }).eq("id", ev.id);
+    if (error) {
+      toast.error(error.message || "You don't have permission to approve events");
+      return;
+    }
+    toast.success(`"${ev.name}" approved`);
+    load();
+  };
+
   const content = selectedEvent ? (
     <EventDetail
       event={selectedEvent}
