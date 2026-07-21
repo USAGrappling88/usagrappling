@@ -992,6 +992,7 @@ const EventFormDialog = ({
   const [form, setForm] = useState({
     name: "",
     event_date: "",
+    end_date: "",
     city: "",
     state: "",
     style: "TBD",
@@ -1007,6 +1008,7 @@ const EventFormDialog = ({
       setForm({
         name: event?.name ?? "",
         event_date: event?.event_date ?? "",
+        end_date: event?.end_date ?? "",
         city: event?.city ?? "",
         state: event?.state ?? "",
         style: event?.style ?? "TBD",
