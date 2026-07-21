@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, createContext, useContext, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { opsSupabase } from '@/lib/opsSupabase';
 
 interface AuthContextType {
   user: User | null;
@@ -114,6 +115,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: error as Error | null };
     }
 
+    // Mirror auth into the ops Supabase project so ops RLS queries run as this user.
+    try {
+      const opsResult = await opsSupabase.auth.signInWithPassword({ email, password });
+      if (opsResult.error) {
+        console.warn('Ops sign-in failed (user may not exist in ops project):', opsResult.error.message);
+      }
+    } catch (e) {
+      console.warn('Ops sign-in threw:', e);
+    }
+
     const nextSession = data.session ?? null;
     const nextUser = data.user ?? nextSession?.user ?? null;
 
@@ -160,6 +171,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) {
       console.error('Error signing out globally, clearing local session instead:', error);
       await supabase.auth.signOut({ scope: 'local' });
+    }
+
+    try {
+      await opsSupabase.auth.signOut();
+    } catch (e) {
+      console.warn('Ops sign-out failed:', e);
     }
 
     setUser(null);

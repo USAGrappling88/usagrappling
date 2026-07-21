@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -28,9 +36,26 @@ import {
   UserPlus,
   Trash2,
   AlertCircle,
+  Plus,
+  Pencil,
+  Archive,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+
+type EventStatus = "active" | "inactive" | "cancelled";
+const EVENT_STYLES = [
+  "Sport Jiu Jitsu",
+  "Wrestling",
+  "Catch",
+  "Grappling",
+  "College",
+  "College-Catch",
+  "TBD",
+];
+const OBLIGATIONS = ["Production", "Admin"];
 
 type AssignmentRole = "ops" | "brackets" | "officials" | "marketing" | "full";
 const ASSIGNMENT_ROLES: AssignmentRole[] = ["ops", "brackets", "officials", "marketing", "full"];
@@ -45,6 +70,9 @@ interface EventRow {
   obligation: string | null;
   notes: string | null;
   status?: string | null;
+  expected_competitors?: number | null;
+  mats?: number | null;
+  color?: string | null;
 }
 interface TaskRow {
   id: string;
@@ -110,6 +138,8 @@ export const EventCommandPanel = () => {
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -165,45 +195,102 @@ export const EventCommandPanel = () => {
 
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null;
 
-  if (selectedEvent) {
-    return (
-      <EventDetail
-        event={selectedEvent}
-        allTasks={tasks.filter((t) => t.event_id === selectedEvent.id)}
-        assignments={assignments.filter((a) => a.event_id === selectedEvent.id)}
-        admins={admins}
-        isAdmin={isAdmin}
-        currentEmail={user?.email ?? null}
-        onBack={() => setSelectedEventId(null)}
-        onToggleTask={toggleTask}
-        onReload={load}
-      />
-    );
-  }
+  const openAdd = () => {
+    setEditingEvent(null);
+    setFormOpen(true);
+  };
+  const openEdit = (ev: EventRow) => {
+    setEditingEvent(ev);
+    setFormOpen(true);
+  };
 
-  return (
+  const updateEventStatus = async (ev: EventRow, status: EventStatus) => {
+    const { error } = await opsSupabase.from("events").update({ status }).eq("id", ev.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Event marked ${status}`);
+    load();
+  };
+
+  const deleteEvent = async (ev: EventRow) => {
+    if (!confirm(`Delete "${ev.name}"? All tasks and assignments will be removed.`)) return;
+    const { error } = await opsSupabase.from("events").delete().eq("id", ev.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Event deleted");
+    setSelectedEventId(null);
+    load();
+  };
+
+  const content = selectedEvent ? (
+    <EventDetail
+      event={selectedEvent}
+      allTasks={tasks.filter((t) => t.event_id === selectedEvent.id)}
+      assignments={assignments.filter((a) => a.event_id === selectedEvent.id)}
+      admins={admins}
+      isAdmin={isAdmin}
+      currentEmail={user?.email ?? null}
+      onBack={() => setSelectedEventId(null)}
+      onToggleTask={toggleTask}
+      onReload={load}
+      onEdit={() => openEdit(selectedEvent)}
+      onDelete={() => deleteEvent(selectedEvent)}
+      onStatusChange={(s) => updateEventStatus(selectedEvent, s)}
+    />
+  ) : (
     <Overview
       events={events}
       tasks={tasks}
       isAdmin={isAdmin}
       onOpenEvent={setSelectedEventId}
+      onAddEvent={openAdd}
     />
+  );
+
+  return (
+    <>
+      {content}
+      {isAdmin && (
+        <EventFormDialog
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          event={editingEvent}
+          onSaved={load}
+        />
+      )}
+    </>
   );
 };
 
 /* ------------------- Overview ------------------- */
 
 const Overview = ({
-  events,
+  events: allEvents,
   tasks,
   isAdmin,
   onOpenEvent,
+  onAddEvent,
 }: {
   events: EventRow[];
   tasks: TaskRow[];
   isAdmin: boolean;
   onOpenEvent: (id: string) => void;
+  onAddEvent?: () => void;
 }) => {
+  const [showArchive, setShowArchive] = useState(false);
+  const activeEvents = useMemo(
+    () => allEvents.filter((e) => (e.status ?? "active") === "active"),
+    [allEvents]
+  );
+  const archivedEvents = useMemo(
+    () => allEvents.filter((e) => e.status === "inactive" || e.status === "cancelled"),
+    [allEvents]
+  );
+  const events = activeEvents;
   const stats = useMemo(() => {
     const now = startOfToday();
     const weekOut = new Date(now.getTime() + 7 * 86_400_000);
@@ -249,11 +336,20 @@ const Overview = ({
 
   return (
     <div className="space-y-6">
-      {!isAdmin && (
-        <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-800">
-          You're viewing events assigned to you.
+      <div className="flex justify-between items-center gap-2">
+        <div>
+          {!isAdmin && (
+            <div className="rounded-md border border-blue-500/30 bg-blue-500/10 p-3 text-sm text-blue-800">
+              You're viewing events assigned to you.
+            </div>
+          )}
         </div>
-      )}
+        {isAdmin && onAddEvent && (
+          <Button onClick={onAddEvent} size="sm">
+            <Plus className="w-4 h-4 mr-2" /> Add Event
+          </Button>
+        )}
+      </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -397,6 +493,40 @@ const Overview = ({
           </div>
         )}
       </div>
+
+      {/* Archive */}
+      {archivedEvents.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowArchive((v) => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {showArchive ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <Archive className="w-4 h-4" /> Archive ({archivedEvents.length})
+          </button>
+          {showArchive && (
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {archivedEvents.map((e) => (
+                <Card
+                  key={e.id}
+                  className="cursor-pointer opacity-70 hover:opacity-100"
+                  onClick={() => onOpenEvent(e.id)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm">{e.name}</CardTitle>
+                      <Badge variant="outline" className="capitalize">{e.status}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {e.event_date} · {e.city}{e.state ? `, ${e.state}` : ""}
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -446,6 +576,9 @@ const EventDetail = ({
   onBack,
   onToggleTask,
   onReload,
+  onEdit,
+  onDelete,
+  onStatusChange,
 }: {
   event: EventRow;
   allTasks: TaskRow[];
@@ -456,6 +589,9 @@ const EventDetail = ({
   onBack: () => void;
   onToggleTask: (t: TaskRow) => void;
   onReload: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onStatusChange?: (s: EventStatus) => void;
 }) => {
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -505,7 +641,32 @@ const EventDetail = ({
                 {event.style && <span>Style: {event.style}</span>}
               </div>
             </div>
-            {obligationBadge(event.obligation)}
+            <div className="flex items-center gap-2 flex-wrap">
+              {obligationBadge(event.obligation)}
+              {isAdmin && onStatusChange && (
+                <Select
+                  value={(event.status as EventStatus) ?? "active"}
+                  onValueChange={(v) => onStatusChange(v as EventStatus)}
+                >
+                  <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              {isAdmin && onEdit && (
+                <Button variant="outline" size="sm" onClick={onEdit}>
+                  <Pencil className="w-4 h-4 mr-1" /> Edit
+                </Button>
+              )}
+              {isAdmin && onDelete && (
+                <Button variant="outline" size="sm" onClick={onDelete}>
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         {event.notes && (
@@ -725,6 +886,185 @@ const TeamSection = ({
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+/* ------------------- Event Form Dialog ------------------- */
+
+const EventFormDialog = ({
+  open,
+  onOpenChange,
+  event,
+  onSaved,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  event: EventRow | null;
+  onSaved: () => void;
+}) => {
+  const isEdit = !!event;
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    event_date: "",
+    city: "",
+    state: "",
+    style: "TBD",
+    obligation: "Production",
+    expected_competitors: "",
+    mats: "",
+    notes: "",
+    color: "",
+  });
+
+  useEffect(() => {
+    if (open) {
+      setForm({
+        name: event?.name ?? "",
+        event_date: event?.event_date ?? "",
+        city: event?.city ?? "",
+        state: event?.state ?? "",
+        style: event?.style ?? "TBD",
+        obligation: event?.obligation ?? "Production",
+        expected_competitors: event?.expected_competitors?.toString() ?? "",
+        mats: event?.mats?.toString() ?? "",
+        notes: event?.notes ?? "",
+        color: event?.color ?? "",
+      });
+    }
+  }, [open, event]);
+
+  const submit = async () => {
+    if (!form.name.trim() || !form.event_date) {
+      toast.error("Name and date are required");
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload: any = {
+        name: form.name.trim(),
+        event_date: form.event_date,
+        city: form.city || null,
+        state: form.state || null,
+        style: form.style || null,
+        obligation: form.obligation || null,
+        notes: form.notes || null,
+        color: form.color || null,
+        expected_competitors: form.expected_competitors ? Number(form.expected_competitors) : null,
+        mats: form.mats ? Number(form.mats) : null,
+      };
+      if (isEdit && event) {
+        const { error } = await opsSupabase.from("events").update(payload).eq("id", event.id);
+        if (error) throw error;
+        toast.success("Event updated — task due dates recalculated server-side");
+      } else {
+        const { error } = await opsSupabase.from("events").insert(payload);
+        if (error) throw error;
+        toast.success("Event created — tasks generated automatically");
+      }
+      onOpenChange(false);
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit Event" : "Add Event"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <Label>Name</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Date</Label>
+              <Input
+                type="date"
+                value={form.event_date}
+                onChange={(e) => setForm({ ...form, event_date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Obligation</Label>
+              <Select value={form.obligation} onValueChange={(v) => setForm({ ...form, obligation: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {OBLIGATIONS.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>City</Label>
+              <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+            </div>
+            <div>
+              <Label>State</Label>
+              <Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+            </div>
+          </div>
+          <div>
+            <Label>Style</Label>
+            <Select value={form.style} onValueChange={(v) => setForm({ ...form, style: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {EVENT_STYLES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label>Expected Competitors</Label>
+              <Input
+                type="number"
+                value={form.expected_competitors}
+                onChange={(e) => setForm({ ...form, expected_competitors: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Mats</Label>
+              <Input
+                type="number"
+                value={form.mats}
+                onChange={(e) => setForm({ ...form, mats: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label>Color</Label>
+              <Input
+                type="color"
+                value={form.color || "#1B3A6B"}
+                onChange={(e) => setForm({ ...form, color: e.target.value })}
+              />
+            </div>
+          </div>
+          <div>
+            <Label>Notes</Label>
+            <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
+          </div>
+          {isEdit && (
+            <p className="text-xs text-muted-foreground">
+              Changing the event date will automatically recompute every task's due date.
+            </p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button onClick={submit} disabled={saving}>
+            {saving && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {isEdit ? "Save Changes" : "Create Event"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
