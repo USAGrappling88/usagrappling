@@ -1636,6 +1636,22 @@ const EventFormDialog = ({
             <Label>Notes</Label>
             <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
           </div>
+          <div className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+            <Checkbox
+              id="tentative"
+              checked={form.tentative}
+              onCheckedChange={(v) => setForm({ ...form, tentative: v === true })}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <Label htmlFor="tentative" className="cursor-pointer font-medium">
+                Tentative — pending approval
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Saves the date so we can plan around it. A super admin must approve before it joins the active board.
+              </p>
+            </div>
+          </div>
           {isEdit && (
             <p className="text-xs text-muted-foreground">
               Changing the event date will automatically recompute every task's due date.
