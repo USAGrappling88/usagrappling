@@ -216,7 +216,7 @@ export const EventCommandPanel = () => {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin]);
+  }, [isAdmin, opsConnected]);
 
   const toggleTask = async (task: TaskRow) => {
     // optimistic
