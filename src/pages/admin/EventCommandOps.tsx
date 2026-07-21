@@ -204,7 +204,8 @@ const obligationBadge = (o: string | null) => {
 export const EventCommandPanel = () => {
   const { user, isAdmin: mainIsAdmin, opsConnected } = useAuth();
   const { role: opsRole } = useOpsAccess(user?.email);
-  const isAdmin = mainIsAdmin || opsRole === "admin" || opsRole === "travel_admin";
+  const isAdmin = mainIsAdmin || opsRole === "admin" || opsRole === "travel_admin" || opsRole === "super_admin";
+  const isSuperAdmin = opsRole === "super_admin";
 
   const [events, setEvents] = useState<EventRow[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
