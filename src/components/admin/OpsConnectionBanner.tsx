@@ -97,6 +97,14 @@ export const OpsConnectionBanner = ({ onReconnected }: Props) => {
               autoFocus
             />
           </div>
+          <button
+            type="button"
+            onClick={sendReset}
+            disabled={sendingReset}
+            className="text-xs text-primary hover:underline text-left disabled:opacity-60"
+          >
+            {sendingReset ? "Sending reset email…" : "Forgot ops password?"}
+          </button>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
               Cancel
