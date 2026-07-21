@@ -1,24 +1,30 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { opsSupabase } from "@/lib/opsSupabase";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   Loader2,
   Facebook,
   Instagram,
   Mail,
   Send,
-  Image as ImageIcon,
+  Upload,
   CheckCircle,
   AlertCircle,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 type Channel = "fb" | "ig" | "email";
+type MediaType = "image" | "video";
 
 type ResultMap = Record<string, { ok: boolean; detail: string }>;
+
+const MAX_SIZE = 200 * 1024 * 1024; // 200 MB
+const ACCEPTED = "image/jpeg,image/png,image/jpg,video/mp4,video/quicktime";
 
 const TEMPLATES = [
   {
@@ -46,10 +52,15 @@ const TEMPLATES = [
 export const ComposePanel = () => {
   const [channels, setChannels] = useState<Set<Channel>>(new Set(["fb"]));
   const [message, setMessage] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [mediaUrl, setMediaUrl] = useState("");
+  const [mediaType, setMediaType] = useState<MediaType | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadPct, setUploadPct] = useState(0);
+  const [showUrlInput, setShowUrlInput] = useState(false);
   const [emailSubject, setEmailSubject] = useState("");
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<ResultMap | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const toggleChannel = (ch: Channel) => {
     setChannels((prev) => {
@@ -65,15 +76,72 @@ export const ComposePanel = () => {
     if (tpl) setMessage(tpl.text);
   };
 
+  const handleFile = async (file: File) => {
+    if (file.size > MAX_SIZE) {
+      toast.error("File exceeds 200 MB limit");
+      return;
+    }
+    const isVideo = file.type.startsWith("video/");
+    const isImage = file.type.startsWith("image/");
+    if (!isVideo && !isImage) {
+      toast.error("Only jpg/png images and mp4/mov videos are supported");
+      return;
+    }
+
+    setUploading(true);
+    setUploadPct(5);
+    const timer = setInterval(() => {
+      setUploadPct((p) => (p < 90 ? p + Math.max(1, Math.round((90 - p) / 10)) : p));
+    }, 300);
+
+    try {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `social/${Date.now()}-${safeName}`;
+      const { error: upErr } = await opsSupabase.storage
+        .from("content-media")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+
+      if (upErr) throw upErr;
+
+      const { data: pub } = opsSupabase.storage.from("content-media").getPublicUrl(path);
+      setMediaUrl(pub.publicUrl);
+      setMediaType(isVideo ? "video" : "image");
+      setUploadPct(100);
+      toast.success("Media uploaded");
+    } catch (err: any) {
+      toast.error(`Upload failed: ${err.message || err}`);
+      setUploadPct(0);
+    } finally {
+      clearInterval(timer);
+      setUploading(false);
+    }
+  };
+
+  const clearMedia = () => {
+    setMediaUrl("");
+    setMediaType(null);
+    setUploadPct(0);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const handleUrlPaste = (url: string) => {
+    setMediaUrl(url);
+    if (!url) { setMediaType(null); return; }
+    const isVideo = /\.(mp4|mov|m4v|webm)(\?|$)/i.test(url);
+    setMediaType(isVideo ? "video" : "image");
+  };
+
   const handleSend = async () => {
     if (!message.trim()) { toast.error("Enter a message"); return; }
     if (channels.size === 0) { toast.error("Select at least one channel"); return; }
     if (channels.has("email") && !emailSubject.trim()) { toast.error("Enter an email subject"); return; }
-    if (channels.has("ig") && !imageUrl.trim()) { toast.error("Instagram requires an image URL"); return; }
+    if (channels.has("ig") && !mediaUrl.trim()) { toast.error("Instagram requires an image or video"); return; }
 
     setSending(true);
     setResults(null);
     const newResults: ResultMap = {};
+
+    const igIsVideo = mediaType === "video";
 
     if (channels.has("fb") || channels.has("ig")) {
       let platforms = "fb";
@@ -82,7 +150,14 @@ export const ComposePanel = () => {
 
       try {
         const { data, error } = await opsSupabase.functions.invoke("post-to-social", {
-          body: { message, platforms, image_url: imageUrl || undefined },
+          body: {
+            message,
+            platforms,
+            media_url: mediaUrl || undefined,
+            media_type: mediaUrl ? mediaType : undefined,
+            // legacy field for backward-compat
+            image_url: mediaUrl && mediaType === "image" ? mediaUrl : undefined,
+          },
         });
 
         if (error) {
@@ -92,21 +167,23 @@ export const ComposePanel = () => {
           if (data?.results?.facebook) {
             const fb = data.results.facebook;
             newResults.facebook = {
-              ok: !!fb.id,
-              detail: fb.id ? `Posted (ID: ${fb.id})` : fb.error?.message || "Failed",
+              ok: !!(fb.id || fb.post_id),
+              detail: fb.id || fb.post_id ? `Posted (ID: ${fb.id || fb.post_id})` : fb.error?.message || fb.error || "Failed",
             };
           }
           if (data?.results?.instagram) {
             const ig = data.results.instagram;
             newResults.instagram = {
               ok: !!ig.id,
-              detail: ig.id ? `Posted (ID: ${ig.id})` : ig.error || "Failed",
+              detail: ig.id
+                ? `Posted${igIsVideo ? " as Reel" : ""} (ID: ${ig.id})`
+                : ig.error?.message || ig.error || "Failed",
             };
           }
         }
-      } catch (err) {
-        if (channels.has("fb")) newResults.facebook = { ok: false, detail: String(err) };
-        if (channels.has("ig")) newResults.instagram = { ok: false, detail: String(err) };
+      } catch (err: any) {
+        if (channels.has("fb")) newResults.facebook = { ok: false, detail: err?.message || String(err) };
+        if (channels.has("ig")) newResults.instagram = { ok: false, detail: err?.message || String(err) };
       }
     }
 
@@ -130,8 +207,12 @@ export const ComposePanel = () => {
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
             .replace(/\n/g, "<br/>");
+          const mediaBlock = mediaUrl && mediaType === "image"
+            ? `<div style="padding:0 20px;"><img src="${mediaUrl}" style="max-width:100%;border-radius:6px;" /></div>`
+            : "";
           const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
             <div style="background:#002868;color:#fff;padding:16px;text-align:center;font-weight:bold;">USA Grappling</div>
+            ${mediaBlock}
             <div style="padding:20px;color:#111;line-height:1.5;">${safe}</div>
             <div style="padding:12px;font-size:12px;color:#666;text-align:center;border-top:1px solid #eee;">
               USA Grappling · usagrappling.com
@@ -151,8 +232,8 @@ export const ComposePanel = () => {
             };
           }
         }
-      } catch (err) {
-        newResults.email = { ok: false, detail: String(err) };
+      } catch (err: any) {
+        newResults.email = { ok: false, detail: err?.message || String(err) };
       }
     }
 
@@ -183,6 +264,8 @@ export const ComposePanel = () => {
     { id: "ig", label: "Instagram", icon: <Instagram className="w-4 h-4" />, color: "bg-pink-600" },
     { id: "email", label: "Email Blast", icon: <Mail className="w-4 h-4" />, color: "bg-green-600" },
   ];
+
+  const igPostingVideo = channels.has("ig") && mediaType === "video" && sending;
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -254,26 +337,100 @@ export const ComposePanel = () => {
 
       <div>
         <label className="text-sm font-medium flex items-center gap-1">
-          <ImageIcon className="w-3 h-3" /> Image URL
+          Media
           {channels.has("ig") && <span className="text-red-500 text-xs ml-1">required for Instagram</span>}
           {!channels.has("ig") && <span className="text-xs text-muted-foreground ml-1">(optional)</span>}
         </label>
-        <Input
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://... (publicly accessible image URL)"
-          className="mt-1"
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept={ACCEPTED}
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) handleFile(f);
+          }}
         />
+
+        {!mediaUrl && !uploading && (
+          <div className="mt-2 space-y-2">
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="w-full border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 hover:border-foreground/40 hover:bg-muted/40 transition-colors"
+            >
+              <Upload className="w-6 h-6 text-muted-foreground" />
+              <div className="text-sm font-medium">Upload media</div>
+              <div className="text-xs text-muted-foreground">JPG, PNG, MP4, or MOV · up to 200 MB</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowUrlInput((s) => !s)}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              or paste URL
+            </button>
+            {showUrlInput && (
+              <Input
+                value={mediaUrl}
+                onChange={(e) => handleUrlPaste(e.target.value)}
+                placeholder="https://... (publicly accessible media URL)"
+              />
+            )}
+          </div>
+        )}
+
+        {uploading && (
+          <div className="mt-2 space-y-2">
+            <Progress value={uploadPct} />
+            <p className="text-xs text-muted-foreground">Uploading… {uploadPct}%</p>
+          </div>
+        )}
+
+        {mediaUrl && !uploading && (
+          <div className="mt-2 space-y-2">
+            <div className="relative rounded-lg overflow-hidden border border-border bg-muted/40">
+              {mediaType === "video" ? (
+                <video src={mediaUrl} controls className="w-full max-h-80 bg-black" />
+              ) : (
+                <img src={mediaUrl} alt="Preview" className="w-full max-h-80 object-contain" />
+              )}
+              <button
+                type="button"
+                onClick={clearMedia}
+                className="absolute top-2 right-2 bg-black/70 hover:bg-black text-white rounded-full p-1"
+                aria-label="Remove media"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground break-all">
+              {mediaType === "video" ? "🎬 Video" : "🖼️ Image"} · {mediaUrl}
+            </p>
+          </div>
+        )}
       </div>
+
+      {channels.has("ig") && mediaType === "video" && (
+        <div className="text-xs text-muted-foreground bg-muted/40 border border-border rounded p-3">
+          ℹ️ Instagram videos post as <strong>Reels</strong> and can take up to ~2 minutes to process.
+          The publish step will wait for Instagram to finish encoding before returning.
+          Facebook video posts are immediate.
+        </div>
+      )}
 
       <Button
         onClick={handleSend}
-        disabled={sending || channels.size === 0 || !message.trim()}
+        disabled={sending || uploading || channels.size === 0 || !message.trim()}
         className="w-full"
         size="lg"
       >
         {sending ? (
-          <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sending...</>
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            {igPostingVideo ? "Publishing… video is processing on Instagram" : "Sending..."}
+          </>
         ) : (
           <><Send className="w-4 h-4 mr-2" /> Send to {[...channels].map(c => c === "fb" ? "Facebook" : c === "ig" ? "Instagram" : "Email").join(" + ")}</>
         )}
