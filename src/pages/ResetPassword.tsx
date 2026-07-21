@@ -77,11 +77,18 @@ const ResetPassword = () => {
     }
 
     setIsSubmitting(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const client = isOps ? opsSupabase : supabase;
+    const { error } = await client.auth.updateUser({ password });
     setIsSubmitting(false);
 
     if (error) {
       toast.error(error.message);
+      return;
+    }
+
+    if (isOps) {
+      toast.success('Ops password updated. Reconnecting…');
+      window.location.href = '/admin';
       return;
     }
 
