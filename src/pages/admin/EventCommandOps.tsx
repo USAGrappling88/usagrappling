@@ -433,17 +433,17 @@ const Overview = ({
       </div>
 
       {/* Conflicts banner */}
-      {stats.conflictGroups.length > 0 && (
+      {stats.conflictClusters.length > 0 && (
         <Card className="border-red-500/40 bg-red-500/5">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2 text-red-700">
-              <AlertTriangle className="w-4 h-4" /> Same-day event conflicts
+              <AlertTriangle className="w-4 h-4" /> Overlapping event conflicts
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {stats.conflictGroups.map(([date, list]) => (
-              <div key={date} className="text-sm">
-                <span className="font-semibold mr-2">{date}:</span>
+            {stats.conflictClusters.map((list, idx) => (
+              <div key={idx} className="text-sm">
+                <span className="font-semibold mr-2">Overlap:</span>
                 <span className="inline-flex flex-wrap gap-2">
                   {list.map((e) => (
                     <button
@@ -451,7 +451,7 @@ const Overview = ({
                       onClick={() => onOpenEvent(e.id)}
                       className="rounded-full border border-red-500/40 bg-white px-2 py-0.5 text-xs hover:bg-red-500/10"
                     >
-                      {e.name}
+                      {e.name} <span className="text-muted-foreground">({formatEventDates(e.event_date, e.end_date)})</span>
                     </button>
                   ))}
                 </span>
