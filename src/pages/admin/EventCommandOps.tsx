@@ -219,7 +219,7 @@ export const EventCommandPanel = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [ev, tk, asg, ad] = await Promise.all([
+      const [ev, tk, asg, ad, mb] = await Promise.all([
         opsSupabase.from("events").select("*").order("event_date", { ascending: true }),
         opsSupabase.from("event_tasks").select("*"),
         isAdmin
@@ -228,6 +228,9 @@ export const EventCommandPanel = () => {
         isAdmin
           ? opsSupabase.from("app_admins").select("email, display_name, role")
           : Promise.resolve({ data: [], error: null } as any),
+        isAdmin
+          ? opsSupabase.from("members").select("id, first_name, last_name, email, phone").order("last_name", { ascending: true })
+          : Promise.resolve({ data: [], error: null } as any),
       ]);
       if (ev.error) throw ev.error;
       if (tk.error) throw tk.error;
@@ -235,6 +238,7 @@ export const EventCommandPanel = () => {
       setTasks((tk.data ?? []) as TaskRow[]);
       setAssignments(((asg as any).data ?? []) as AssignmentRow[]);
       setAdmins(((ad as any).data ?? []) as AdminRow[]);
+      setMembers(((mb as any).data ?? []) as MemberRow[]);
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to load event command data");
     } finally {
