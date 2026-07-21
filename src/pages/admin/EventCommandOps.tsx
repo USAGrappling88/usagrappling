@@ -210,6 +210,7 @@ export const EventCommandPanel = () => {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [assignments, setAssignments] = useState<AssignmentRow[]>([]);
   const [admins, setAdmins] = useState<AdminRow[]>([]);
+  const [members, setMembers] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
