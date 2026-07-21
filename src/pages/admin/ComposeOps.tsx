@@ -371,6 +371,9 @@ export const ComposePanel = () => {
               <div className="text-sm font-medium">Upload media</div>
               <div className="text-xs text-muted-foreground">JPG, PNG, MP4, or MOV · up to 200 MB</div>
             </button>
+            <p className="text-xs text-amber-600 dark:text-amber-500">
+              Videos must be under 50 MB — export at 1080p for social.
+            </p>
             <button
               type="button"
               onClick={() => setShowUrlInput((s) => !s)}
