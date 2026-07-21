@@ -70,6 +70,9 @@ interface EventRow {
   obligation: string | null;
   notes: string | null;
   status?: string | null;
+  expected_competitors?: number | null;
+  mats?: number | null;
+  color?: string | null;
 }
 interface TaskRow {
   id: string;
