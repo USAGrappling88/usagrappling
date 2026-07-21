@@ -264,6 +264,34 @@ export const EventCommandPanel = () => {
     }
   };
 
+  const updateTaskAssignee = async (
+    task: TaskRow,
+    patch: { assignee: string | null; assigned_user_id: string | null; assigned_member_id: string | null }
+  ) => {
+    const prev = { assignee: task.assignee, assigned_user_id: task.assigned_user_id ?? null, assigned_member_id: task.assigned_member_id ?? null };
+    setTasks((cur) => cur.map((t) => (t.id === task.id ? { ...t, ...patch } : t)));
+    const { error } = await opsSupabase.from("event_tasks").update(patch).eq("id", task.id);
+    if (error) {
+      setTasks((cur) => cur.map((t) => (t.id === task.id ? { ...t, ...prev } : t)));
+      toast.error(error.message);
+    }
+  };
+
+  const createMember = async (input: { first_name: string; last_name: string; email: string; phone: string }) => {
+    const payload = {
+      first_name: input.first_name.trim() || null,
+      last_name: input.last_name.trim() || null,
+      email: input.email.trim() || null,
+      phone: input.phone.trim() || null,
+    };
+    const { data, error } = await opsSupabase.from("members").insert(payload).select("id, first_name, last_name, email, phone").single();
+    if (error) throw error;
+    const row = data as MemberRow;
+    setMembers((cur) => [...cur, row].sort((a, b) => (a.last_name ?? "").localeCompare(b.last_name ?? "")));
+    return row;
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
