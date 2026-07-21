@@ -18,6 +18,7 @@ import { ComposePanel } from "./ComposeOps";
 import { ContentReviewPanel } from "./ContentReviewOps";
 import { UsersAccessPanel } from "./UsersAccessOps";
 import { EventCommandPanel } from "./EventCommandOps";
+import { OpsConnectionBanner } from "@/components/admin/OpsConnectionBanner";
 
 type TabDef = {
   value: string;
