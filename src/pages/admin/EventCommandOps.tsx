@@ -641,7 +641,32 @@ const EventDetail = ({
                 {event.style && <span>Style: {event.style}</span>}
               </div>
             </div>
-            {obligationBadge(event.obligation)}
+            <div className="flex items-center gap-2 flex-wrap">
+              {obligationBadge(event.obligation)}
+              {isAdmin && onStatusChange && (
+                <Select
+                  value={(event.status as EventStatus) ?? "active"}
+                  onValueChange={(v) => onStatusChange(v as EventStatus)}
+                >
+                  <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              {isAdmin && onEdit && (
+                <Button variant="outline" size="sm" onClick={onEdit}>
+                  <Pencil className="w-4 h-4 mr-1" /> Edit
+                </Button>
+              )}
+              {isAdmin && onDelete && (
+                <Button variant="outline" size="sm" onClick={onDelete}>
+                  <Trash2 className="w-4 h-4 mr-1" /> Delete
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         {event.notes && (
