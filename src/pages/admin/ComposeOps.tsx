@@ -24,7 +24,7 @@ type MediaType = "image" | "video";
 type ResultMap = Record<string, { ok: boolean; detail: string }>;
 
 const MAX_SIZE = 200 * 1024 * 1024; // 200 MB
-const ACCEPTED = "image/jpeg,image/png,image/jpg,video/mp4,video/quicktime";
+const ACCEPTED = "image/jpeg,image/png,image/jpg,image/webp,image/heic,image/heif,video/mp4,video/quicktime";
 
 const TEMPLATES = [
   {
