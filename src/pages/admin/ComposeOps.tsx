@@ -109,12 +109,19 @@ export const ComposePanel = () => {
       setUploadPct(100);
       toast.success("Media uploaded");
     } catch (err: any) {
-      toast.error(`Upload failed: ${err.message || err}`);
-      setUploadPct(0);
-    } finally {
       clearInterval(timer);
+      setUploadPct(0);
       setUploading(false);
+      const detail =
+        err?.error?.message ||
+        err?.message ||
+        err?.error ||
+        (typeof err === "string" ? err : JSON.stringify(err));
+      toast.error(`Upload failed: ${detail}`);
+      return;
     }
+    clearInterval(timer);
+    setUploading(false);
   };
 
   const clearMedia = () => {
