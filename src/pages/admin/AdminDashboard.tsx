@@ -70,8 +70,8 @@ const AdminDashboard = () => {
               <LogOut className="w-4 h-4 mr-2" /> Sign Out
             </Button>
           </div>
-          <EventCommandPanel />
           <OpsConnectionBanner />
+          <EventCommandPanel />
           {opsName ? <p className="text-xs text-muted-foreground mt-4">Signed in as {opsName}</p> : null}
         </div>
       </Layout>
