@@ -55,7 +55,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 
-type EventStatus = "active" | "inactive" | "cancelled";
+type EventStatus = "active" | "inactive" | "cancelled" | "pending";
 const EVENT_STYLES = [
   "Sport Jiu Jitsu",
   "Wrestling",
@@ -204,7 +204,8 @@ const obligationBadge = (o: string | null) => {
 export const EventCommandPanel = () => {
   const { user, isAdmin: mainIsAdmin, opsConnected } = useAuth();
   const { role: opsRole } = useOpsAccess(user?.email);
-  const isAdmin = mainIsAdmin || opsRole === "admin" || opsRole === "travel_admin";
+  const isAdmin = mainIsAdmin || opsRole === "admin" || opsRole === "travel_admin" || opsRole === "super_admin";
+  const isSuperAdmin = opsRole === "super_admin";
 
   const [events, setEvents] = useState<EventRow[]>([]);
   const [tasks, setTasks] = useState<TaskRow[]>([]);
@@ -333,6 +334,16 @@ export const EventCommandPanel = () => {
     load();
   };
 
+  const approveEvent = async (ev: EventRow) => {
+    const { error } = await opsSupabase.from("events").update({ status: "active" }).eq("id", ev.id);
+    if (error) {
+      toast.error(error.message || "You don't have permission to approve events");
+      return;
+    }
+    toast.success(`"${ev.name}" approved`);
+    load();
+  };
+
   const content = selectedEvent ? (
     <EventDetail
       event={selectedEvent}
@@ -356,8 +367,10 @@ export const EventCommandPanel = () => {
       events={events}
       tasks={tasks}
       isAdmin={isAdmin}
+      isSuperAdmin={isSuperAdmin}
       onOpenEvent={setSelectedEventId}
       onAddEvent={openAdd}
+      onApproveEvent={approveEvent}
     />
   );
 
@@ -382,18 +395,26 @@ const Overview = ({
   events: allEvents,
   tasks,
   isAdmin,
+  isSuperAdmin,
   onOpenEvent,
   onAddEvent,
+  onApproveEvent,
 }: {
   events: EventRow[];
   tasks: TaskRow[];
   isAdmin: boolean;
+  isSuperAdmin?: boolean;
   onOpenEvent: (id: string) => void;
   onAddEvent?: () => void;
+  onApproveEvent?: (ev: EventRow) => void;
 }) => {
   const [showArchive, setShowArchive] = useState(false);
   const activeEvents = useMemo(
     () => allEvents.filter((e) => (e.status ?? "active") === "active"),
+    [allEvents]
+  );
+  const pendingEvents = useMemo(
+    () => allEvents.filter((e) => e.status === "pending"),
     [allEvents]
   );
   const archivedEvents = useMemo(
@@ -639,6 +660,63 @@ const Overview = ({
         )}
       </div>
 
+      {/* Pending approval */}
+      {pendingEvents.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600" />
+            Pending Approval ({pendingEvents.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pendingEvents.map((e) => {
+              const countdown = eventCountdown(e);
+              return (
+                <Card
+                  key={e.id}
+                  className="cursor-pointer border-2 border-dashed border-amber-500/50 bg-amber-500/5 opacity-90 hover:opacity-100 transition"
+                  onClick={() => onOpenEvent(e.id)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-base text-muted-foreground">{e.name}</CardTitle>
+                      <Badge className="bg-amber-500 hover:bg-amber-500 text-white">TENTATIVE</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <CalendarIcon className="w-3 h-3" /> {formatEventDates(e.event_date, e.end_date)}
+                      </span>
+                      {e.city && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {e.city}{e.state ? `, ${e.state}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="text-xs text-muted-foreground">{countdown.label}</div>
+                    <div onClick={(ev) => ev.stopPropagation()}>
+                      {isSuperAdmin && onApproveEvent ? (
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => onApproveEvent(e)}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-1" /> Approve
+                        </Button>
+                      ) : (
+                        <div className="text-xs text-muted-foreground italic text-center py-1">
+                          Awaiting approval
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Archive */}
       {archivedEvents.length > 0 && (
         <div>
@@ -876,6 +954,7 @@ const EventDetail = ({
                   <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
@@ -1390,6 +1469,7 @@ const EventFormDialog = ({
     mats: "",
     notes: "",
     color: "",
+    tentative: false,
   });
 
   useEffect(() => {
@@ -1406,6 +1486,7 @@ const EventFormDialog = ({
         mats: event?.mats?.toString() ?? "",
         notes: event?.notes ?? "",
         color: event?.color ?? "",
+        tentative: event?.status === "pending",
       });
     }
   }, [open, event]);
@@ -1435,13 +1516,18 @@ const EventFormDialog = ({
         mats: form.mats ? Number(form.mats) : null,
       };
       if (isEdit && event) {
+        // Only touch status if the tentative toggle flipped its meaning.
+        const currentPending = event.status === "pending";
+        if (currentPending && !form.tentative) payload.status = "active";
+        else if (!currentPending && form.tentative && event.status !== "inactive" && event.status !== "cancelled") payload.status = "pending";
         const { error } = await opsSupabase.from("events").update(payload).eq("id", event.id);
         if (error) throw error;
         toast.success("Event updated — task due dates recalculated server-side");
       } else {
+        payload.status = form.tentative ? "pending" : "active";
         const { error } = await opsSupabase.from("events").insert(payload);
         if (error) throw error;
-        toast.success("Event created — tasks generated automatically");
+        toast.success(form.tentative ? "Event saved as tentative — pending approval" : "Event created — tasks generated automatically");
       }
       onOpenChange(false);
       onSaved();
@@ -1549,6 +1635,22 @@ const EventFormDialog = ({
           <div>
             <Label>Notes</Label>
             <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
+          </div>
+          <div className="flex items-start gap-3 rounded-md border border-amber-500/40 bg-amber-500/5 p-3">
+            <Checkbox
+              id="tentative"
+              checked={form.tentative}
+              onCheckedChange={(v) => setForm({ ...form, tentative: v === true })}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <Label htmlFor="tentative" className="cursor-pointer font-medium">
+                Tentative — pending approval
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Saves the date so we can plan around it. A super admin must approve before it joins the active board.
+              </p>
+            </div>
           </div>
           {isEdit && (
             <p className="text-xs text-muted-foreground">
