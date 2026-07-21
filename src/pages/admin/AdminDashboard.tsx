@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useOpsAccess } from "@/hooks/useOpsAccess";
+import { useOpsAccess, type ModuleName } from "@/hooks/useOpsAccess";
 import { Layout } from "@/components/layout/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,20 @@ import { ContentReviewPanel } from "./ContentReviewOps";
 import { UsersAccessPanel } from "./UsersAccessOps";
 import { EventCommandPanel } from "./EventCommandOps";
 
+type TabDef = {
+  value: string;
+  module: ModuleName | null; // null = always visible to full admins
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  panel: React.ReactNode;
+  superOnly?: boolean;
+};
+
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { user, isAdmin, isSuperAdmin, isLoading: authLoading, signOut } = useAuth();
-  const { role: opsRole, displayName: opsName, loading: opsLoading } = useOpsAccess(user?.email);
-  const [activeTab, setActiveTab] = useState("kanban");
+  const { role: opsRole, displayName: opsName, loading: opsLoading, isSuperAdmin: opsSuper, isFullAdmin, canView } = useOpsAccess(user?.email);
+  const [activeTab, setActiveTab] = useState<string>("kanban");
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -49,7 +58,7 @@ const AdminDashboard = () => {
     return null;
   }
 
-  // Event Staff: scoped experience — no site-admin required.
+  // Event Staff: scoped experience.
   if (opsRole === "event_staff") {
     return (
       <Layout>
@@ -67,13 +76,37 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!isAdmin && opsRole !== "admin" && opsRole !== "travel_admin") {
+  const hasSuper = isSuperAdmin || opsSuper;
+  const hasFullAdmin = isAdmin || isFullAdmin;
+
+  const allTabs: TabDef[] = [
+    { value: "kanban", module: "kanban", label: "Kanban", icon: LayoutDashboard, panel: <KanbanPanel /> },
+    { value: "event-command", module: "event_command", label: "Event Command", icon: Command, panel: <EventCommandPanel /> },
+    { value: "content-review", module: "content_review", label: "Content Review", icon: ClipboardCheck, panel: <ContentReviewPanel /> },
+    { value: "press", module: "press", label: "Press", icon: FileText, panel: <PressPanel /> },
+    { value: "events", module: "events", label: "Events", icon: Calendar, panel: <EventPanel /> },
+    { value: "staff", module: "staff", label: "Staff", icon: Users, panel: <StaffPanel /> },
+    { value: "users", module: "users", label: "Users", icon: UserCog, panel: <UserManagementPanel />, superOnly: true },
+    { value: "access", module: null, label: "Users & Access", icon: KeyRound, panel: <UsersAccessPanel />, superOnly: true },
+    { value: "world-team", module: "world_team", label: "World Team", icon: Trophy, panel: <WorldTeamPanel /> },
+    { value: "marketing", module: "marketing", label: "Marketing", icon: Megaphone, panel: <MarketingPanel /> },
+    { value: "compose", module: "compose", label: "Compose", icon: PenSquare, panel: <ComposePanel /> },
+    { value: "hermes", module: "hermes", label: "Hermes", icon: MessageSquare, panel: <HermesPanel /> },
+  ];
+
+  const visibleTabs = allTabs.filter((t) => {
+    if (t.superOnly) return hasSuper;
+    if (hasFullAdmin) return true;
+    return t.module ? canView(t.module) : false;
+  });
+
+  if (visibleTabs.length === 0) {
     return (
       <Layout>
         <div className="max-w-md mx-auto py-20 px-4 text-center">
           <ShieldAlert className="w-12 h-12 text-destructive mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-foreground mb-2">Access Denied</h1>
-          <p className="text-muted-foreground mb-4">Admin privileges required.</p>
+          <p className="text-muted-foreground mb-4">You don't have permission to view any admin sections.</p>
           <Button variant="outline" onClick={() => signOut().then(() => navigate("/"))}>
             <LogOut className="w-4 h-4 mr-2" /> Sign Out
           </Button>
@@ -82,7 +115,7 @@ const AdminDashboard = () => {
     );
   }
 
-  const canManageAccess = isSuperAdmin || opsRole === "admin";
+  const effectiveTab = visibleTabs.find((t) => t.value === activeTab) ? activeTab : visibleTabs[0].value;
 
   return (
     <Layout>
@@ -94,62 +127,21 @@ const AdminDashboard = () => {
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={effectiveTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6 flex-wrap h-auto">
-            <TabsTrigger value="kanban" className="flex items-center gap-2">
-              <LayoutDashboard className="w-4 h-4" /> Kanban
-            </TabsTrigger>
-            <TabsTrigger value="event-command" className="flex items-center gap-2">
-              <Command className="w-4 h-4" /> Event Command
-            </TabsTrigger>
-            <TabsTrigger value="content-review" className="flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4" /> Content Review
-            </TabsTrigger>
-            <TabsTrigger value="press" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" /> Press
-            </TabsTrigger>
-            <TabsTrigger value="events" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" /> Events
-            </TabsTrigger>
-            <TabsTrigger value="staff" className="flex items-center gap-2">
-              <Users className="w-4 h-4" /> Staff
-            </TabsTrigger>
-            {isSuperAdmin && (
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <UserCog className="w-4 h-4" /> Users
-              </TabsTrigger>
-            )}
-            {canManageAccess && (
-              <TabsTrigger value="access" className="flex items-center gap-2">
-                <KeyRound className="w-4 h-4" /> Users &amp; Access
-              </TabsTrigger>
-            )}
-            <TabsTrigger value="world-team" className="flex items-center gap-2">
-              <Trophy className="w-4 h-4" /> World Team
-            </TabsTrigger>
-            <TabsTrigger value="marketing" className="flex items-center gap-2">
-              <Megaphone className="w-4 h-4" /> Marketing
-            </TabsTrigger>
-            <TabsTrigger value="compose" className="flex items-center gap-2">
-              <PenSquare className="w-4 h-4" /> Compose
-            </TabsTrigger>
-            <TabsTrigger value="hermes" className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" /> Hermes
-            </TabsTrigger>
+            {visibleTabs.map((t) => {
+              const Icon = t.icon;
+              return (
+                <TabsTrigger key={t.value} value={t.value} className="flex items-center gap-2">
+                  <Icon className="w-4 h-4" /> {t.label}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
 
-          <TabsContent value="kanban"><KanbanPanel /></TabsContent>
-          <TabsContent value="event-command"><EventCommandPanel /></TabsContent>
-          <TabsContent value="content-review"><ContentReviewPanel /></TabsContent>
-          <TabsContent value="press"><PressPanel /></TabsContent>
-          <TabsContent value="events"><EventPanel /></TabsContent>
-          <TabsContent value="staff"><StaffPanel /></TabsContent>
-          {isSuperAdmin && <TabsContent value="users"><UserManagementPanel /></TabsContent>}
-          {canManageAccess && <TabsContent value="access"><UsersAccessPanel /></TabsContent>}
-          <TabsContent value="world-team"><WorldTeamPanel /></TabsContent>
-          <TabsContent value="marketing"><MarketingPanel /></TabsContent>
-          <TabsContent value="compose"><ComposePanel /></TabsContent>
-          <TabsContent value="hermes"><HermesPanel /></TabsContent>
+          {visibleTabs.map((t) => (
+            <TabsContent key={t.value} value={t.value}>{t.panel}</TabsContent>
+          ))}
         </Tabs>
       </div>
     </Layout>
