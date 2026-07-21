@@ -103,11 +103,56 @@ const startOfToday = () => {
   return d;
 };
 
+const parseDay = (dateStr: string) => {
+  const d = new Date(dateStr + (dateStr.length === 10 ? "T00:00:00" : ""));
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 const daysBetween = (dateStr: string | null) => {
   if (!dateStr) return null;
-  const target = new Date(dateStr + (dateStr.length === 10 ? "T00:00:00" : ""));
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target.getTime() - startOfToday().getTime()) / 86_400_000);
+  return Math.round((parseDay(dateStr).getTime() - startOfToday().getTime()) / 86_400_000);
+};
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const fmtDate = (dateStr: string) => {
+  const d = parseDay(dateStr);
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+};
+const formatEventDates = (start: string, end: string | null | undefined) => {
+  if (!end || end === start) return fmtDate(start);
+  const s = parseDay(start);
+  const e = parseDay(end);
+  if (s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth()) {
+    return `${MONTHS[s.getMonth()]} ${s.getDate()}\u2013${e.getDate()}, ${s.getFullYear()}`;
+  }
+  if (s.getFullYear() === e.getFullYear()) {
+    return `${MONTHS[s.getMonth()]} ${s.getDate()} \u2013 ${MONTHS[e.getMonth()]} ${e.getDate()}, ${s.getFullYear()}`;
+  }
+  return `${fmtDate(start)} \u2013 ${fmtDate(end)}`;
+};
+
+const eventCountdown = (ev: EventRow): { label: string; live: boolean; past: boolean } => {
+  const startDays = daysBetween(ev.event_date);
+  const endDays = daysBetween(ev.end_date ?? ev.event_date);
+  if (startDays === null) return { label: "", live: false, past: false };
+  if (startDays > 0) return { label: `In ${startDays} day${startDays === 1 ? "" : "s"}`, live: false, past: false };
+  if (endDays !== null && endDays < 0) {
+    return { label: `${Math.abs(endDays)} day${Math.abs(endDays) === 1 ? "" : "s"} ago`, live: false, past: true };
+  }
+  // in range (today >= start and today <= end)
+  const totalDays = endDays !== null ? endDays - startDays + 1 : 1;
+  const currentDay = 1 - startDays; // startDays <= 0
+  if (totalDays > 1) return { label: `LIVE \u2014 Day ${currentDay} of ${totalDays}`, live: true, past: false };
+  return { label: "Today", live: true, past: false };
+};
+
+const rangesOverlap = (aStart: string, aEnd: string | null | undefined, bStart: string, bEnd: string | null | undefined) => {
+  const as = parseDay(aStart).getTime();
+  const ae = parseDay(aEnd ?? aStart).getTime();
+  const bs = parseDay(bStart).getTime();
+  const be = parseDay(bEnd ?? bStart).getTime();
+  return as <= be && bs <= ae;
 };
 
 const taskUrgency = (t: TaskRow) => {
