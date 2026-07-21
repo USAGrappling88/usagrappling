@@ -660,6 +660,63 @@ const Overview = ({
         )}
       </div>
 
+      {/* Pending approval */}
+      {pendingEvents.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-amber-600" />
+            Pending Approval ({pendingEvents.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pendingEvents.map((e) => {
+              const countdown = eventCountdown(e);
+              return (
+                <Card
+                  key={e.id}
+                  className="cursor-pointer border-2 border-dashed border-amber-500/50 bg-amber-500/5 opacity-90 hover:opacity-100 transition"
+                  onClick={() => onOpenEvent(e.id)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-base text-muted-foreground">{e.name}</CardTitle>
+                      <Badge className="bg-amber-500 hover:bg-amber-500 text-white">TENTATIVE</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground flex items-center gap-3 mt-1 flex-wrap">
+                      <span className="flex items-center gap-1">
+                        <CalendarIcon className="w-3 h-3" /> {formatEventDates(e.event_date, e.end_date)}
+                      </span>
+                      {e.city && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {e.city}{e.state ? `, ${e.state}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="text-xs text-muted-foreground">{countdown.label}</div>
+                    <div onClick={(ev) => ev.stopPropagation()}>
+                      {isSuperAdmin && onApproveEvent ? (
+                        <Button
+                          size="sm"
+                          className="w-full"
+                          onClick={() => onApproveEvent(e)}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-1" /> Approve
+                        </Button>
+                      ) : (
+                        <div className="text-xs text-muted-foreground italic text-center py-1">
+                          Awaiting approval
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Archive */}
       {archivedEvents.length > 0 && (
         <div>
