@@ -44,6 +44,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
 
 type EventStatus = "active" | "inactive" | "cancelled";
 const EVENT_STYLES = [
@@ -56,6 +66,15 @@ const EVENT_STYLES = [
   "TBD",
 ];
 const OBLIGATIONS = ["Production", "Admin"];
+
+const MAT_COLORS = [
+  { label: "Blue", value: "#3a80f0" },
+  { label: "Gray", value: "#6b7280" },
+  { label: "Red", value: "#e8404a" },
+  { label: "Black", value: "#111827" },
+];
+
+const LEGACY_ASSIGNEES = ["Me", "Staff", "Design"];
 
 type AssignmentRole = "ops" | "brackets" | "officials" | "marketing" | "full";
 const ASSIGNMENT_ROLES: AssignmentRole[] = ["ops", "brackets", "officials", "marketing", "full"];
@@ -80,6 +99,8 @@ interface TaskRow {
   event_id: string;
   name: string;
   assignee: string | null;
+  assigned_user_id?: string | null;
+  assigned_member_id?: string | null;
   due_date: string | null;
   done: boolean;
   phase: string | null;
@@ -95,6 +116,13 @@ interface AdminRow {
   email: string;
   display_name: string | null;
   role: string;
+}
+interface MemberRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
 }
 
 const startOfToday = () => {
@@ -182,6 +210,7 @@ export const EventCommandPanel = () => {
   const [tasks, setTasks] = useState<TaskRow[]>([]);
   const [assignments, setAssignments] = useState<AssignmentRow[]>([]);
   const [admins, setAdmins] = useState<AdminRow[]>([]);
+  const [members, setMembers] = useState<MemberRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -190,7 +219,7 @@ export const EventCommandPanel = () => {
   const load = async () => {
     setLoading(true);
     try {
-      const [ev, tk, asg, ad] = await Promise.all([
+      const [ev, tk, asg, ad, mb] = await Promise.all([
         opsSupabase.from("events").select("*").order("event_date", { ascending: true }),
         opsSupabase.from("event_tasks").select("*"),
         isAdmin
@@ -199,6 +228,9 @@ export const EventCommandPanel = () => {
         isAdmin
           ? opsSupabase.from("app_admins").select("email, display_name, role")
           : Promise.resolve({ data: [], error: null } as any),
+        isAdmin
+          ? opsSupabase.from("members").select("id, first_name, last_name, email, phone").order("last_name", { ascending: true })
+          : Promise.resolve({ data: [], error: null } as any),
       ]);
       if (ev.error) throw ev.error;
       if (tk.error) throw tk.error;
@@ -206,6 +238,7 @@ export const EventCommandPanel = () => {
       setTasks((tk.data ?? []) as TaskRow[]);
       setAssignments(((asg as any).data ?? []) as AssignmentRow[]);
       setAdmins(((ad as any).data ?? []) as AdminRow[]);
+      setMembers(((mb as any).data ?? []) as MemberRow[]);
     } catch (err: any) {
       toast.error(err?.message ?? "Failed to load event command data");
     } finally {
@@ -230,6 +263,34 @@ export const EventCommandPanel = () => {
       toast.error(error.message);
     }
   };
+
+  const updateTaskAssignee = async (
+    task: TaskRow,
+    patch: { assignee: string | null; assigned_user_id: string | null; assigned_member_id: string | null }
+  ) => {
+    const prev = { assignee: task.assignee, assigned_user_id: task.assigned_user_id ?? null, assigned_member_id: task.assigned_member_id ?? null };
+    setTasks((cur) => cur.map((t) => (t.id === task.id ? { ...t, ...patch } : t)));
+    const { error } = await opsSupabase.from("event_tasks").update(patch).eq("id", task.id);
+    if (error) {
+      setTasks((cur) => cur.map((t) => (t.id === task.id ? { ...t, ...prev } : t)));
+      toast.error(error.message);
+    }
+  };
+
+  const createMember = async (input: { first_name: string; last_name: string; email: string; phone: string }) => {
+    const payload = {
+      first_name: input.first_name.trim() || null,
+      last_name: input.last_name.trim() || null,
+      email: input.email.trim() || null,
+      phone: input.phone.trim() || null,
+    };
+    const { data, error } = await opsSupabase.from("members").insert(payload).select("id, first_name, last_name, email, phone").single();
+    if (error) throw error;
+    const row = data as MemberRow;
+    setMembers((cur) => [...cur, row].sort((a, b) => (a.last_name ?? "").localeCompare(b.last_name ?? "")));
+    return row;
+  };
+
 
   if (loading) {
     return (
@@ -278,10 +339,13 @@ export const EventCommandPanel = () => {
       allTasks={tasks.filter((t) => t.event_id === selectedEvent.id)}
       assignments={assignments.filter((a) => a.event_id === selectedEvent.id)}
       admins={admins}
+      members={members}
       isAdmin={isAdmin}
       currentEmail={user?.email ?? null}
       onBack={() => setSelectedEventId(null)}
       onToggleTask={toggleTask}
+      onAssigneeChange={updateTaskAssignee}
+      onCreateMember={createMember}
       onReload={load}
       onEdit={() => openEdit(selectedEvent)}
       onDelete={() => deleteEvent(selectedEvent)}
@@ -652,10 +716,13 @@ const EventDetail = ({
   allTasks,
   assignments,
   admins,
+  members,
   isAdmin,
   currentEmail,
   onBack,
   onToggleTask,
+  onAssigneeChange,
+  onCreateMember,
   onReload,
   onEdit,
   onDelete,
@@ -665,16 +732,71 @@ const EventDetail = ({
   allTasks: TaskRow[];
   assignments: AssignmentRow[];
   admins: AdminRow[];
+  members: MemberRow[];
   isAdmin: boolean;
   currentEmail: string | null;
   onBack: () => void;
   onToggleTask: (t: TaskRow) => void;
+  onAssigneeChange: (
+    t: TaskRow,
+    patch: { assignee: string | null; assigned_user_id: string | null; assigned_member_id: string | null }
+  ) => void | Promise<void>;
+  onCreateMember: (input: { first_name: string; last_name: string; email: string; phone: string }) => Promise<MemberRow>;
   onReload: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   onStatusChange?: (s: EventStatus) => void;
 }) => {
   const [filter, setFilter] = useState<Filter>("all");
+  const [groupBy, setGroupBy] = useState<"phase" | "assignee">("phase");
+  const [userIdToAdmin, setUserIdToAdmin] = useState<Record<string, AdminRow>>({});
+
+  // Resolve which admins correspond to this event's assignment user_ids.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const map: Record<string, AdminRow> = {};
+      await Promise.all(
+        assignments.map(async (a) => {
+          for (const ad of admins) {
+            const { data } = await opsSupabase.rpc("user_id_by_email", { p_email: ad.email });
+            if (data === a.user_id) {
+              map[a.user_id] = ad;
+              break;
+            }
+          }
+        })
+      );
+      if (!cancelled) setUserIdToAdmin(map);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignments.length, admins.length]);
+
+  const memberById = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
+  const teamMemberAdmins = useMemo(
+    () => assignments.map((a) => userIdToAdmin[a.user_id]).filter(Boolean) as AdminRow[],
+    [assignments, userIdToAdmin]
+  );
+  const emailToUserId = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const [uid, ad] of Object.entries(userIdToAdmin)) m[ad.email.toLowerCase()] = uid;
+    return m;
+  }, [userIdToAdmin]);
+
+  const memberDisplayName = (m: MemberRow) =>
+    `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim() || m.email || m.phone || "Unnamed contact";
+
+  const assigneeDisplay = (t: TaskRow): { label: string; isContact: boolean } => {
+    if (t.assigned_member_id) {
+      const m = memberById.get(t.assigned_member_id);
+      return { label: m ? memberDisplayName(m) : (t.assignee ?? "Contact"), isContact: true };
+    }
+    if (t.assignee) return { label: t.assignee, isContact: false };
+    return { label: "Unassigned", isContact: false };
+  };
 
   const filteredTasks = useMemo(() => {
     const now = startOfToday();
@@ -694,6 +816,18 @@ const EventDetail = ({
   }, [allTasks, filter]);
 
   const grouped = useMemo(() => {
+    if (groupBy === "assignee") {
+      const g = new Map<string, TaskRow[]>();
+      filteredTasks.forEach((t) => {
+        const key = assigneeDisplay(t).label;
+        const arr = g.get(key) ?? [];
+        arr.push(t);
+        g.set(key, arr);
+      });
+      return [...g.entries()]
+        .sort((a, b) => (a[0] === "Unassigned" ? 1 : b[0] === "Unassigned" ? -1 : a[0].localeCompare(b[0])))
+        .map(([k, tasks]) => [k, { order: 0, tasks }] as [string, { order: number; tasks: TaskRow[] }]);
+    }
     const g = new Map<string, { order: number; tasks: TaskRow[] }>();
     filteredTasks.forEach((t) => {
       const key = t.phase ?? "General";
@@ -703,7 +837,8 @@ const EventDetail = ({
       g.set(key, entry);
     });
     return [...g.entries()].sort((a, b) => a[1].order - b[1].order);
-  }, [filteredTasks]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredTasks, groupBy, memberById]);
 
   return (
     <div className="space-y-6">
@@ -766,19 +901,31 @@ const EventDetail = ({
         )}
       </Card>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {(["all", "overdue", "week", "incomplete", "done"] as Filter[]).map((f) => (
-          <Button
-            key={f}
-            size="sm"
-            variant={filter === f ? "default" : "outline"}
-            onClick={() => setFilter(f)}
-            className="capitalize"
-          >
-            {f === "week" ? "This Week" : f}
-          </Button>
-        ))}
+      {/* Filters + grouping */}
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          {(["all", "overdue", "week", "incomplete", "done"] as Filter[]).map((f) => (
+            <Button
+              key={f}
+              size="sm"
+              variant={filter === f ? "default" : "outline"}
+              onClick={() => setFilter(f)}
+              className="capitalize"
+            >
+              {f === "week" ? "This Week" : f}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Group by</Label>
+          <Select value={groupBy} onValueChange={(v) => setGroupBy(v as "phase" | "assignee")}>
+            <SelectTrigger className="h-8 w-36 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="phase">Phase</SelectItem>
+              <SelectItem value="assignee">Assigned to</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Tasks */}
@@ -786,14 +933,15 @@ const EventDetail = ({
         <p className="text-sm text-muted-foreground">No tasks match this filter.</p>
       ) : (
         <div className="space-y-4">
-          {grouped.map(([phase, { tasks }]) => (
-            <Card key={phase}>
+          {grouped.map(([header, { tasks }]) => (
+            <Card key={header}>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">{phase}</CardTitle>
+                <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">{header}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1">
                 {tasks.map((t) => {
                   const u = taskUrgency(t);
+                  const display = assigneeDisplay(t);
                   return (
                     <div key={t.id} className="flex items-center gap-3 py-1.5">
                       <Checkbox checked={t.done} onCheckedChange={() => onToggleTask(t)} />
@@ -802,9 +950,26 @@ const EventDetail = ({
                           {t.name}
                         </div>
                         <div className="text-xs text-muted-foreground">
-                          {t.assignee ?? "Unassigned"}{t.due_date ? ` · Due ${t.due_date}` : ""}
+                          {t.due_date ? `Due ${t.due_date}` : "No due date"}
                         </div>
                       </div>
+                      {isAdmin ? (
+                        <AssigneePicker
+                          task={t}
+                          teamAdmins={teamMemberAdmins}
+                          allAdmins={admins}
+                          members={members}
+                          emailToUserId={emailToUserId}
+                          onSelect={onAssigneeChange}
+                          onCreateMember={onCreateMember}
+                          display={display}
+                        />
+                      ) : (
+                        <span className="text-xs px-2 py-1 rounded-full border bg-muted text-foreground shrink-0 max-w-[160px] truncate">
+                          {display.label}
+                          {display.isContact && <span className="ml-1 text-[10px] text-muted-foreground">(contact)</span>}
+                        </span>
+                      )}
                       <span className={`text-xs px-2 py-1 rounded border shrink-0 ${u.color}`}>{u.label}</span>
                     </div>
                   );
@@ -828,6 +993,225 @@ const EventDetail = ({
     </div>
   );
 };
+
+/* ------------------- Assignee Picker ------------------- */
+
+const AssigneePicker = ({
+  task,
+  teamAdmins,
+  allAdmins,
+  members,
+  emailToUserId,
+  onSelect,
+  onCreateMember,
+  display,
+}: {
+  task: TaskRow;
+  teamAdmins: AdminRow[];
+  allAdmins: AdminRow[];
+  members: MemberRow[];
+  emailToUserId: Record<string, string>;
+  onSelect: (
+    t: TaskRow,
+    patch: { assignee: string | null; assigned_user_id: string | null; assigned_member_id: string | null }
+  ) => void | Promise<void>;
+  onCreateMember: (input: { first_name: string; last_name: string; email: string; phone: string }) => Promise<MemberRow>;
+  display: { label: string; isContact: boolean };
+}) => {
+  const [open, setOpen] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [newMember, setNewMember] = useState({ first_name: "", last_name: "", email: "", phone: "" });
+  const [creating, setCreating] = useState(false);
+
+  const memberName = (m: MemberRow) =>
+    `${m.first_name ?? ""} ${m.last_name ?? ""}`.trim() || m.email || m.phone || "Unnamed contact";
+
+  const selectAdmin = (ad: AdminRow) => {
+    const uid = emailToUserId[ad.email.toLowerCase()] ?? null;
+    onSelect(task, {
+      assignee: ad.display_name || ad.email,
+      assigned_user_id: uid,
+      assigned_member_id: null,
+    });
+    setOpen(false);
+  };
+
+  const selectMember = (m: MemberRow) => {
+    onSelect(task, {
+      assignee: memberName(m),
+      assigned_user_id: null,
+      assigned_member_id: m.id,
+    });
+    setOpen(false);
+  };
+
+  const selectLegacy = (label: string) => {
+    onSelect(task, { assignee: label, assigned_user_id: null, assigned_member_id: null });
+    setOpen(false);
+  };
+
+  const clearAssignee = () => {
+    onSelect(task, { assignee: null, assigned_user_id: null, assigned_member_id: null });
+    setOpen(false);
+  };
+
+  const submitNewMember = async () => {
+    if (!newMember.first_name.trim() && !newMember.last_name.trim() && !newMember.email.trim()) {
+      toast.error("Enter a name");
+      return;
+    }
+    if (!newMember.email.trim() && !newMember.phone.trim()) {
+      toast.error("Email or phone is required");
+      return;
+    }
+    setCreating(true);
+    try {
+      const created = await onCreateMember(newMember);
+      selectMember(created);
+      setNewMember({ first_name: "", last_name: "", email: "", phone: "" });
+      setShowNew(false);
+      toast.success("Contact created");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to create contact");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const teamEmailSet = new Set(teamAdmins.map((a) => a.email.toLowerCase()));
+  const otherAdmins = allAdmins.filter((a) => !teamEmailSet.has(a.email.toLowerCase()));
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setShowNew(false);
+      }}
+    >
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className="text-xs px-2 py-1 rounded-full border bg-background hover:bg-muted shrink-0 max-w-[180px] truncate flex items-center gap-1"
+          title={display.label}
+        >
+          <span className="truncate">{display.label}</span>
+          {display.isContact && (
+            <Badge variant="outline" className="h-4 px-1 text-[9px] uppercase">contact</Badge>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-0" align="end">
+        {showNew ? (
+          <div className="p-3 space-y-2">
+            <div className="text-xs font-semibold">New contact</div>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                placeholder="First name"
+                value={newMember.first_name}
+                onChange={(e) => setNewMember({ ...newMember, first_name: e.target.value })}
+              />
+              <Input
+                placeholder="Last name"
+                value={newMember.last_name}
+                onChange={(e) => setNewMember({ ...newMember, last_name: e.target.value })}
+              />
+            </div>
+            <Input
+              placeholder="Email"
+              type="email"
+              value={newMember.email}
+              onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+            />
+            <Input
+              placeholder="Phone"
+              value={newMember.phone}
+              onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
+            />
+            <p className="text-[11px] text-muted-foreground">Email or phone required.</p>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button size="sm" variant="ghost" onClick={() => setShowNew(false)} disabled={creating}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={submitNewMember} disabled={creating}>
+                {creating && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
+                Create & assign
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Command>
+            <CommandInput placeholder="Search people or contacts…" />
+            <CommandList className="max-h-72">
+              <CommandEmpty>No matches.</CommandEmpty>
+              {teamAdmins.length > 0 && (
+                <CommandGroup heading="Team on this event">
+                  {teamAdmins.map((ad) => (
+                    <CommandItem
+                      key={`team-${ad.email}`}
+                      value={`team ${ad.display_name ?? ""} ${ad.email}`}
+                      onSelect={() => selectAdmin(ad)}
+                    >
+                      {ad.display_name || ad.email}
+                      <span className="ml-auto text-[10px] text-muted-foreground">{ad.role}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              {otherAdmins.length > 0 && (
+                <CommandGroup heading="Admins">
+                  {otherAdmins.map((ad) => (
+                    <CommandItem
+                      key={`admin-${ad.email}`}
+                      value={`admin ${ad.display_name ?? ""} ${ad.email}`}
+                      onSelect={() => selectAdmin(ad)}
+                    >
+                      {ad.display_name || ad.email}
+                      <span className="ml-auto text-[10px] text-muted-foreground">{ad.role}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              <CommandGroup heading="Quick labels">
+                {LEGACY_ASSIGNEES.map((l) => (
+                  <CommandItem key={`legacy-${l}`} value={`label ${l}`} onSelect={() => selectLegacy(l)}>
+                    {l}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+              {members.length > 0 && (
+                <CommandGroup heading="CRM contacts">
+                  {members.slice(0, 200).map((m) => (
+                    <CommandItem
+                      key={`member-${m.id}`}
+                      value={`contact ${memberName(m)} ${m.email ?? ""} ${m.phone ?? ""}`}
+                      onSelect={() => selectMember(m)}
+                    >
+                      <span className="truncate">{memberName(m)}</span>
+                      {m.email && <span className="ml-auto text-[10px] text-muted-foreground truncate">{m.email}</span>}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              <CommandSeparator />
+              <CommandGroup>
+                <CommandItem value="__new_contact" onSelect={() => setShowNew(true)}>
+                  <Plus className="w-3 h-3 mr-2" /> New contact
+                </CommandItem>
+                {(task.assignee || task.assigned_user_id || task.assigned_member_id) && (
+                  <CommandItem value="__clear" onSelect={clearAssignee}>
+                    Clear assignee
+                  </CommandItem>
+                )}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 
 /* ------------------- Team Section ------------------- */
 
@@ -1144,12 +1528,22 @@ const EventFormDialog = ({
               />
             </div>
             <div>
-              <Label>Color</Label>
-              <Input
-                type="color"
-                value={form.color || "#1B3A6B"}
-                onChange={(e) => setForm({ ...form, color: e.target.value })}
-              />
+              <Label>Mat color</Label>
+              <div className="flex items-center gap-2 mt-2">
+                {MAT_COLORS.map((c) => {
+                  const selected = (form.color || "").toLowerCase() === c.value.toLowerCase();
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.label}
+                      onClick={() => setForm({ ...form, color: c.value })}
+                      className={`w-7 h-7 rounded-full border-2 transition ${selected ? "border-foreground ring-2 ring-ring/40" : "border-border"}`}
+                      style={{ backgroundColor: c.value }}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
           <div>
