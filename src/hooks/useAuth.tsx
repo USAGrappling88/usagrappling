@@ -115,6 +115,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return { error: error as Error | null };
     }
 
+    // Mirror auth into the ops Supabase project so ops RLS queries run as this user.
+    try {
+      const opsResult = await opsSupabase.auth.signInWithPassword({ email, password });
+      if (opsResult.error) {
+        console.warn('Ops sign-in failed (user may not exist in ops project):', opsResult.error.message);
+      }
+    } catch (e) {
+      console.warn('Ops sign-in threw:', e);
+    }
+
     const nextSession = data.session ?? null;
     const nextUser = data.user ?? nextSession?.user ?? null;
 
