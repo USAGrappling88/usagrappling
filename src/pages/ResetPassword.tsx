@@ -29,20 +29,23 @@ const ResetPassword = () => {
         const type = queryParams.get('type') ?? hashParams.get('type');
         const accessToken = hashParams.get('access_token');
         const refreshToken = hashParams.get('refresh_token');
+        const opsFlag = queryParams.get('ops') === '1' || hashParams.get('ops') === '1';
+        setIsOps(opsFlag);
+        const client = opsFlag ? opsSupabase : supabase;
 
         if (code) {
-          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+          const { data, error } = await client.auth.exchangeCodeForSession(code);
           if (error) throw error;
           setIsValidSession(!!data.session);
         } else if (type === 'recovery' && accessToken && refreshToken) {
-          const { data, error } = await supabase.auth.setSession({
+          const { data, error } = await client.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
           });
           if (error) throw error;
           setIsValidSession(!!data.session);
         } else {
-          const { data, error } = await supabase.auth.getSession();
+          const { data, error } = await client.auth.getSession();
           if (error) throw error;
           setIsValidSession(!!data.session);
         }
