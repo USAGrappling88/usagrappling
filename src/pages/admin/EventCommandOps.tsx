@@ -353,21 +353,47 @@ const Overview = ({
       if (d < now) overdue++;
       else if (d <= weekOut) dueWeek++;
     }
-    // same-day conflicts
-    const byDate = new Map<string, EventRow[]>();
-    events.forEach((e) => {
-      const list = byDate.get(e.event_date) ?? [];
-      list.push(e);
-      byDate.set(e.event_date, list);
-    });
-    const conflictGroups = [...byDate.entries()].filter(([, l]) => l.length > 1);
+    // overlapping-range conflicts
+    const conflictMap = new Map<string, EventRow[]>();
+    for (let i = 0; i < events.length; i++) {
+      for (let j = i + 1; j < events.length; j++) {
+        const a = events[i];
+        const b = events[j];
+        if (rangesOverlap(a.event_date, a.end_date, b.event_date, b.end_date)) {
+          const key = [a.id, b.id].sort().join("|");
+          const existing = conflictMap.get(key) ?? [a, b];
+          conflictMap.set(key, existing);
+        }
+      }
+    }
+    // merge overlapping clusters: build union-find-lite by grouping any events that share overlaps
+    const clusters: EventRow[][] = [];
+    const seen = new Set<string>();
+    for (const e of events) {
+      if (seen.has(e.id)) continue;
+      const cluster: EventRow[] = [e];
+      seen.add(e.id);
+      let grew = true;
+      while (grew) {
+        grew = false;
+        for (const other of events) {
+          if (seen.has(other.id)) continue;
+          if (cluster.some((c) => rangesOverlap(c.event_date, c.end_date, other.event_date, other.end_date))) {
+            cluster.push(other);
+            seen.add(other.id);
+            grew = true;
+          }
+        }
+      }
+      if (cluster.length > 1) clusters.push(cluster);
+    }
     return {
       total: events.length,
       overdue,
       dueWeek,
       done,
-      conflicts: conflictGroups.length,
-      conflictGroups,
+      conflicts: clusters.length,
+      conflictClusters: clusters,
     };
   }, [events, tasks]);
 
