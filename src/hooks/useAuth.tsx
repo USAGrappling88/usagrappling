@@ -207,12 +207,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setSession(null);
     setIsAdmin(false);
     setIsSuperAdmin(false);
+    setOpsConnected(false);
+    setOpsError(null);
     checkedAdminUserIdRef.current = null;
     previousUserIdRef.current = null;
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, isSuperAdmin, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isSuperAdmin, isLoading, opsConnected, opsError, reconnectOps, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
