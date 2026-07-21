@@ -195,29 +195,74 @@ export const EventCommandPanel = () => {
 
   const selectedEvent = selectedEventId ? events.find((e) => e.id === selectedEventId) : null;
 
-  if (selectedEvent) {
-    return (
-      <EventDetail
-        event={selectedEvent}
-        allTasks={tasks.filter((t) => t.event_id === selectedEvent.id)}
-        assignments={assignments.filter((a) => a.event_id === selectedEvent.id)}
-        admins={admins}
-        isAdmin={isAdmin}
-        currentEmail={user?.email ?? null}
-        onBack={() => setSelectedEventId(null)}
-        onToggleTask={toggleTask}
-        onReload={load}
-      />
-    );
-  }
+  const openAdd = () => {
+    setEditingEvent(null);
+    setFormOpen(true);
+  };
+  const openEdit = (ev: EventRow) => {
+    setEditingEvent(ev);
+    setFormOpen(true);
+  };
 
-  return (
+  const updateEventStatus = async (ev: EventRow, status: EventStatus) => {
+    const { error } = await opsSupabase.from("events").update({ status }).eq("id", ev.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Event marked ${status}`);
+    load();
+  };
+
+  const deleteEvent = async (ev: EventRow) => {
+    if (!confirm(`Delete "${ev.name}"? All tasks and assignments will be removed.`)) return;
+    const { error } = await opsSupabase.from("events").delete().eq("id", ev.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Event deleted");
+    setSelectedEventId(null);
+    load();
+  };
+
+  const content = selectedEvent ? (
+    <EventDetail
+      event={selectedEvent}
+      allTasks={tasks.filter((t) => t.event_id === selectedEvent.id)}
+      assignments={assignments.filter((a) => a.event_id === selectedEvent.id)}
+      admins={admins}
+      isAdmin={isAdmin}
+      currentEmail={user?.email ?? null}
+      onBack={() => setSelectedEventId(null)}
+      onToggleTask={toggleTask}
+      onReload={load}
+      onEdit={() => openEdit(selectedEvent)}
+      onDelete={() => deleteEvent(selectedEvent)}
+      onStatusChange={(s) => updateEventStatus(selectedEvent, s)}
+    />
+  ) : (
     <Overview
       events={events}
       tasks={tasks}
       isAdmin={isAdmin}
       onOpenEvent={setSelectedEventId}
+      onAddEvent={openAdd}
     />
+  );
+
+  return (
+    <>
+      {content}
+      {isAdmin && (
+        <EventFormDialog
+          open={formOpen}
+          onOpenChange={setFormOpen}
+          event={editingEvent}
+          onSaved={load}
+        />
+      )}
+    </>
   );
 };
 
