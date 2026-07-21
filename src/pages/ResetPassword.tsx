@@ -18,6 +18,7 @@ const ResetPassword = () => {
   const [isValidSession, setIsValidSession] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [isOps, setIsOps] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     const establishRecoverySession = async () => {
