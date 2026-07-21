@@ -493,6 +493,40 @@ const Overview = ({
           </div>
         )}
       </div>
+
+      {/* Archive */}
+      {archivedEvents.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowArchive((v) => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {showArchive ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            <Archive className="w-4 h-4" /> Archive ({archivedEvents.length})
+          </button>
+          {showArchive && (
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {archivedEvents.map((e) => (
+                <Card
+                  key={e.id}
+                  className="cursor-pointer opacity-70 hover:opacity-100"
+                  onClick={() => onOpenEvent(e.id)}
+                >
+                  <CardHeader className="pb-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm">{e.name}</CardTitle>
+                      <Badge variant="outline" className="capitalize">{e.status}</Badge>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {e.event_date} · {e.city}{e.state ? `, ${e.state}` : ""}
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
