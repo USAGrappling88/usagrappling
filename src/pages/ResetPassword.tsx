@@ -89,7 +89,7 @@ const ResetPassword = () => {
 
     if (isOps) {
       toast.success('Ops password updated. Reconnecting…');
-      window.location.href = '/admin';
+      setIsSuccess(true);
       return;
     }
 
