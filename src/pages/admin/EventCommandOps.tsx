@@ -954,6 +954,7 @@ const EventDetail = ({
                   <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="cancelled">Cancelled</SelectItem>
                   </SelectContent>
