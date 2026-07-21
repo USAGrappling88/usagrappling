@@ -67,6 +67,15 @@ const EVENT_STYLES = [
 ];
 const OBLIGATIONS = ["Production", "Admin"];
 
+const MAT_COLORS = [
+  { label: "Blue", value: "#3a80f0" },
+  { label: "Gray", value: "#6b7280" },
+  { label: "Red", value: "#e8404a" },
+  { label: "Black", value: "#111827" },
+];
+
+const LEGACY_ASSIGNEES = ["Me", "Staff", "Design"];
+
 type AssignmentRole = "ops" | "brackets" | "officials" | "marketing" | "full";
 const ASSIGNMENT_ROLES: AssignmentRole[] = ["ops", "brackets", "officials", "marketing", "full"];
 
@@ -90,6 +99,8 @@ interface TaskRow {
   event_id: string;
   name: string;
   assignee: string | null;
+  assigned_user_id?: string | null;
+  assigned_member_id?: string | null;
   due_date: string | null;
   done: boolean;
   phase: string | null;
@@ -105,6 +116,13 @@ interface AdminRow {
   email: string;
   display_name: string | null;
   role: string;
+}
+interface MemberRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  phone: string | null;
 }
 
 const startOfToday = () => {
