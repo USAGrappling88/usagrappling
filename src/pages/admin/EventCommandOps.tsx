@@ -55,7 +55,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 
-type EventStatus = "active" | "inactive" | "cancelled";
+type EventStatus = "active" | "inactive" | "cancelled" | "pending";
 const EVENT_STYLES = [
   "Sport Jiu Jitsu",
   "Wrestling",
