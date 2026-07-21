@@ -71,6 +71,7 @@ const AdminDashboard = () => {
             </Button>
           </div>
           <EventCommandPanel />
+          <OpsConnectionBanner />
           {opsName ? <p className="text-xs text-muted-foreground mt-4">Signed in as {opsName}</p> : null}
         </div>
       </Layout>
