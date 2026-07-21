@@ -24,7 +24,7 @@ type MediaType = "image" | "video";
 type ResultMap = Record<string, { ok: boolean; detail: string }>;
 
 const MAX_SIZE = 200 * 1024 * 1024; // 200 MB
-const ACCEPTED = "image/jpeg,image/png,image/jpg,video/mp4,video/quicktime";
+const ACCEPTED = "image/jpeg,image/png,image/jpg,image/webp,image/heic,image/heif,video/mp4,video/quicktime";
 
 const TEMPLATES = [
   {
@@ -76,16 +76,55 @@ export const ComposePanel = () => {
     if (tpl) setMessage(tpl.text);
   };
 
-  const handleFile = async (file: File) => {
-    if (file.size > MAX_SIZE) {
+  const convertImageToJpeg = (file: File): Promise<File> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { URL.revokeObjectURL(url); reject(new Error("Canvas not supported")); return; }
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            URL.revokeObjectURL(url);
+            if (!blob) { reject(new Error("JPEG conversion failed")); return; }
+            const baseName = file.name.replace(/\.[^.]+$/, "");
+            resolve(new File([blob], `${baseName}.jpg`, { type: "image/jpeg" }));
+          },
+          "image/jpeg",
+          0.9
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not load image for conversion")); };
+      img.src = url;
+    });
+
+  const handleFile = async (input: File) => {
+    if (input.size > MAX_SIZE) {
       toast.error("File exceeds 200 MB limit");
       return;
     }
-    const isVideo = file.type.startsWith("video/");
-    const isImage = file.type.startsWith("image/");
+    const isVideo = input.type.startsWith("video/");
+    const isImage = input.type.startsWith("image/");
     if (!isVideo && !isImage) {
       toast.error("Only jpg/png images and mp4/mov videos are supported");
       return;
+    }
+
+    let file = input;
+    if (isImage && input.type !== "image/jpeg" && input.type !== "image/jpg") {
+      try {
+        file = await convertImageToJpeg(input);
+        toast.info("Converted image to JPEG for Instagram compatibility");
+      } catch (err: any) {
+        toast.error(`Image conversion failed: ${err?.message || err}`);
+        return;
+      }
     }
 
     setUploading(true);
