@@ -24,8 +24,27 @@ export const OpsConnectionBanner = ({ onReconnected }: Props) => {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
 
   if (opsConnected) return null;
+
+  const sendReset = async () => {
+    const email = user?.email;
+    if (!email) {
+      toast.error("Not signed in");
+      return;
+    }
+    setSendingReset(true);
+    const { error } = await opsSupabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password?ops=1`,
+    });
+    setSendingReset(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Password reset email sent to ${email}`);
+  };
 
   const submit = async () => {
     if (!password) {
