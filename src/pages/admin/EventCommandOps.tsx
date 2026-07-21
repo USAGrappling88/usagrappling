@@ -1528,12 +1528,22 @@ const EventFormDialog = ({
               />
             </div>
             <div>
-              <Label>Color</Label>
-              <Input
-                type="color"
-                value={form.color || "#1B3A6B"}
-                onChange={(e) => setForm({ ...form, color: e.target.value })}
-              />
+              <Label>Mat color</Label>
+              <div className="flex items-center gap-2 mt-2">
+                {MAT_COLORS.map((c) => {
+                  const selected = (form.color || "").toLowerCase() === c.value.toLowerCase();
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      title={c.label}
+                      onClick={() => setForm({ ...form, color: c.value })}
+                      className={`w-7 h-7 rounded-full border-2 transition ${selected ? "border-foreground ring-2 ring-ring/40" : "border-border"}`}
+                      style={{ backgroundColor: c.value }}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </div>
           <div>
