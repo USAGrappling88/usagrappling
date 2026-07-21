@@ -269,16 +269,28 @@ export const EventCommandPanel = () => {
 /* ------------------- Overview ------------------- */
 
 const Overview = ({
-  events,
+  events: allEvents,
   tasks,
   isAdmin,
   onOpenEvent,
+  onAddEvent,
 }: {
   events: EventRow[];
   tasks: TaskRow[];
   isAdmin: boolean;
   onOpenEvent: (id: string) => void;
+  onAddEvent?: () => void;
 }) => {
+  const [showArchive, setShowArchive] = useState(false);
+  const activeEvents = useMemo(
+    () => allEvents.filter((e) => (e.status ?? "active") === "active"),
+    [allEvents]
+  );
+  const archivedEvents = useMemo(
+    () => allEvents.filter((e) => e.status === "inactive" || e.status === "cancelled"),
+    [allEvents]
+  );
+  const events = activeEvents;
   const stats = useMemo(() => {
     const now = startOfToday();
     const weekOut = new Date(now.getTime() + 7 * 86_400_000);
