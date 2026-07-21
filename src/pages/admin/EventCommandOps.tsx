@@ -1026,11 +1026,16 @@ const EventFormDialog = ({
       toast.error("Name and date are required");
       return;
     }
+    if (form.end_date && form.end_date < form.event_date) {
+      toast.error("End date must be on or after the start date");
+      return;
+    }
     setSaving(true);
     try {
       const payload: any = {
         name: form.name.trim(),
         event_date: form.event_date,
+        end_date: form.end_date || null,
         city: form.city || null,
         state: form.state || null,
         style: form.style || null,
