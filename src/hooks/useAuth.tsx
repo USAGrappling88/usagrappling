@@ -25,9 +25,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [opsConnected, setOpsConnected] = useState(false);
+  const [opsError, setOpsError] = useState<string | null>(null);
   const previousUserIdRef = useRef<string | null>(null);
   const checkedAdminUserIdRef = useRef<string | null>(null);
   const authSyncIdRef = useRef(0);
+
+  const attemptOpsSignIn = async (email: string, password: string) => {
+    try {
+      const opsResult = await opsSupabase.auth.signInWithPassword({ email, password });
+      if (opsResult.error) {
+        console.error('Ops sign-in failed:', opsResult.error.message);
+        setOpsConnected(false);
+        setOpsError(opsResult.error.message);
+        return { error: opsResult.error as Error };
+      }
+      setOpsConnected(true);
+      setOpsError(null);
+      return { error: null };
+    } catch (e: any) {
+      console.error('Ops sign-in threw:', e);
+      setOpsConnected(false);
+      setOpsError(e?.message ?? 'Unknown ops sign-in error');
+      return { error: e as Error };
+    }
+  };
+
+  const reconnectOps = async (password: string) => {
+    const email = user?.email;
+    if (!email) return { error: new Error('Not signed in') };
+    return attemptOpsSignIn(email, password);
+  };
 
   const checkAdminRole = async (userId: string) => {
     const { data, error } = await supabase
