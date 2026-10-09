@@ -66,7 +66,7 @@ const memberships = [
   },
   {
     title: "Event Sanction",
-    price: "$90",
+    price: "$115",
     period: "/event",
     description: "For event organizers",
     features: [
