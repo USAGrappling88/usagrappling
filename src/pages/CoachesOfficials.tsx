@@ -1,13 +1,30 @@
+import { Helmet } from "react-helmet-async";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import OfficiateApplicationForm from "@/components/coaches/OfficiateApplicationForm";
 import StaffApplicationForm from "@/components/coaches/StaffApplicationForm";
 
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
+const PAGE_URL = "https://www.usa-grappling.com/coaches-officials";
+const PAGE_TITLE = "Coaches & Officials Compliance | USA Grappling";
+const PAGE_DESCRIPTION =
+  "All Coaches & Officials must hold a current Grappling Leaders Card to participate in NCGA or USA Grappling events. Get your card and apply to officiate or staff tournaments.";
 
 const CoachesOfficials = () => {
   return (
     <Layout>
+      <Helmet>
+        <title>{PAGE_TITLE}</title>
+        <meta name="description" content={PAGE_DESCRIPTION} />
+        <link rel="canonical" href={PAGE_URL} />
+        <meta property="og:title" content={PAGE_TITLE} />
+        <meta property="og:description" content={PAGE_DESCRIPTION} />
+        <meta property="og:url" content={PAGE_URL} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={PAGE_TITLE} />
+        <meta name="twitter:description" content={PAGE_DESCRIPTION} />
+      </Helmet>
       {/* Referee & Official Application */}
       <OfficiateApplicationForm />
 
