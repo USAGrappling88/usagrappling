@@ -310,7 +310,7 @@ const Events = () => {
             </h2>
             <p className="text-muted-foreground mb-8">
               Want to host a USA Grappling sanctioned event? Get official status, 
-              insurance coverage, and promotional support. Event sanctions are $90 per event.
+              insurance coverage, and promotional support. Event sanctions are $115 per event.
             </p>
             <Button asChild className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold">
               <a href="/contact">Contact Us to Get Started</a>

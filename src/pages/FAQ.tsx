@@ -20,7 +20,7 @@ const faqCategories = [
       },
       {
         question: "How much does a membership cost?",
-        answer: "Youth and Adult memberships are $66/year. Grappling Leader (coach/official) memberships are $66/year. Academy Charters are $115/year, and Event Sanctions are $90/event.",
+        answer: "Youth and Adult memberships are $66/year. Grappling Leader (coach/official) memberships are $66/year. Academy Charters are $115/year, and Event Sanctions are $115/event.",
       },
       {
         question: "How do I renew my membership?",
@@ -92,7 +92,7 @@ const faqCategories = [
     faqs: [
       {
         question: "How do I sanction an event with USA Grappling?",
-        answer: "Apply for an Event Sanction ($90) through Smoothcomp. Your event will receive official status, insurance coverage, and promotional support from USA Grappling.",
+        answer: "Apply for an Event Sanction ($115) through Smoothcomp. Your event will receive official status, insurance coverage, and promotional support from USA Grappling.",
       },
       {
         question: "What are the benefits of hosting a sanctioned event?",
