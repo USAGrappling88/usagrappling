@@ -21,13 +21,9 @@ const CoachesOfficials = () => {
         <meta property="og:description" content={PAGE_DESCRIPTION} />
         <meta property="og:url" content={PAGE_URL} />
         <meta property="og:type" content="website" />
-        <meta property="og:image" content={OG_IMAGE} />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={PAGE_TITLE} />
         <meta name="twitter:description" content={PAGE_DESCRIPTION} />
-        <meta name="twitter:image" content={OG_IMAGE} />
       </Helmet>
       {/* Referee & Official Application */}
       <OfficiateApplicationForm />
