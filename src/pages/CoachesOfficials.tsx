@@ -6,8 +6,6 @@ import StaffApplicationForm from "@/components/coaches/StaffApplicationForm";
 
 const MEMBERSHIP_URL = "https://usag.uventex.com/memberships";
 const PAGE_URL = "https://www.usa-grappling.com/coaches-officials";
-const OG_IMAGE =
-  "https://vtxgnaznsdaakmvkwcka.supabase.co/storage/v1/object/public/press-images/og%2Fcoaches-officials.jpg";
 const PAGE_TITLE = "Coaches & Officials Compliance | USA Grappling";
 const PAGE_DESCRIPTION =
   "All Coaches & Officials must hold a current Grappling Leaders Card to participate in NCGA or USA Grappling events. Get your card and apply to officiate or staff tournaments.";
