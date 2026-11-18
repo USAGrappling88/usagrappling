@@ -12,7 +12,6 @@ const navLinks = [
   { href: "/collegiate", label: "Collegiate Programs" },
   { href: "/coaches-officials", label: "Coaches/Officials" },
   { href: "/faq", label: "FAQ" },
-  { href: "https://shop.usa-grappling.com/", label: "Shop", external: true },
   { href: "/contact", label: "Contact" },
 ];
 

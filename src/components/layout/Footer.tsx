@@ -13,7 +13,6 @@ const footerLinks = {
   resources: [
     { label: "FAQ", href: "/faq" },
     { label: "Events", href: "https://usag.smoothcomp.com/en/federation/362/events", external: true },
-    { label: "Shop", href: "https://usa-grappling-inc.myshopify.com/", external: true },
     { label: "Privacy Policy", href: "/privacy" },
   ],
   social: [
