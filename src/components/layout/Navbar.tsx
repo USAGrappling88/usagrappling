@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import usagLogo from "@/assets/usag-logo.png";
 
-const navLinks = [
+const navLinks: { href: string; label: string; external?: boolean }[] = [
   { href: "/", label: "Home" },
   { href: "/team-usa", label: "Team USA" },
   { href: "/events", label: "Events" },
